@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Superadmin - Platform Overview{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="sa-panel-banner mb-4">
+            &#9889; SUPERADMIN CONTROL PANEL - All property data visible - Elevated privileges active
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">Platform Overview</h2>
+                <div class="text-muted small">Unified cross property metrics and recent platform activity</div>
+            </div>
+        </div>
+
+        <div class="sa-kpi-grid mb-4">
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value" id="sa-total-properties">{{ total_properties }}</div>
+                <div class="sa-kpi-label">Total Properties</div>
+                <div class="sa-kpi-sub">{{ onboarded_properties }} active</div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value" id="sa-total-users">{{ total_users }}</div>
+                <div class="sa-kpi-label">Total Users</div>
+                <div class="sa-kpi-sub">
+                    {% for role, count in role_breakdown.items() %}
+                        {{ role|replace('_', ' ')|title }}: {{ count }}{% if not loop.last %} | {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value">{{ active_tenants }}</div>
+                <div class="sa-kpi-label">Active Tenants</div>
+                <div class="sa-kpi-sub">{{ total_tenants }} total</div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value">{{ active_subscriptions }}</div>
+                <div class="sa-kpi-label">Active Subscriptions</div>
+                <div class="sa-kpi-sub">{{ trial_subscriptions }} on trial</div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value">&#8377;{{ total_revenue_this_month | format_inr }}</div>
+                <div class="sa-kpi-label">Revenue This Month</div>
+                <div class="sa-kpi-sub">&#8377;{{ total_revenue_all_time | format_inr }} all time</div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value" id="sa-agent-actions-today">{{ agent_actions_today }}</div>
+                <div class="sa-kpi-label">Agent Actions Today</div>
+                <div class="sa-kpi-sub"><span id="sa-pending-agent-actions">{{ pending_agent_actions_all }}</span> pending</div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value">{{ total_campaigns_active }}</div>
+                <div class="sa-kpi-label">Campaigns Active</div>
+                <div class="sa-kpi-sub">Across all properties</div>
+            </div>
+            <div class="sa-kpi-tile">
+                <div class="sa-kpi-value {% if scheduler_running %}sa-status-ok{% else %}sa-status-error{% endif %}">
+                    {% if scheduler_running %}&#9989; All Systems{% else %}&#9888; Issues Detected{% endif %}
+                </div>
+                <div class="sa-kpi-label">System Status</div>
+                <div class="sa-kpi-sub">Scheduler {% if scheduler_running %}running{% else %}stopped{% endif %}</div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            {% for property in recent_properties %}
+            <div class="col-xl col-lg-4 col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="fw-semibold">{{ property.name }}</div>
+                        <div class="small text-muted">{{ property.city or 'N/A' }}</div>
+                        <div class="mt-2 d-flex gap-2 flex-wrap">
+                            <span class="badge text-bg-dark">{{ property.subscription_tier|title }}</span>
+                            <span class="badge {% if property.onboarding_complete %}text-bg-success{% else %}text-bg-warning{% endif %}">
+                                {% if property.onboarding_complete %}Complete{% else %}Pending Setup{% endif %}
+                            </span>
+                        </div>
+                        <div class="small text-muted mt-2">{{ property.created_at.strftime('%d %b %Y') if property.created_at else '-' }}</div>
+                        <a class="small fw-semibold d-inline-block mt-2" href="{{ url_for('superadmin.property_detail', property_id=property.id) }}">View -></a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Recent Agent Actions</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Mission</th>
+                                <th>Action</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in recent_agent_actions %}
+                            <tr>
+                                <td>{{ action.property.name if action.property else 'N/A' }}</td>
+                                <td>{{ action.mission_type|title }}</td>
+                                <td>{{ action.action_type|replace('_', ' ')|title }}</td>
+                                <td>{{ action.description|truncate(90) }}</td>
+                                <td>
+                                    <span class="badge {% if action.status == 'pending' %}text-bg-primary{% elif action.status in ['approved', 'auto_executed'] %}text-bg-success{% elif action.status == 'rejected' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">
+                                        {{ action.status|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td>{{ action.score|round(2) if action.score is not none else '-' }}</td>
+                                <td>{{ action.created_at.strftime('%d %b %Y %H:%M') if action.created_at else '-' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="text-muted">No recent agent actions found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Recent Demo Requests</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Stores</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in recent_demo_requests %}
+                            <tr>
+                                <td>{{ req.full_name }}</td>
+                                <td>{{ req.company_name or '-' }}</td>
+                                <td>{{ req.email }}</td>
+                                <td>{{ req.role or '-' }}</td>
+                                <td>{{ req.num_stores or '-' }}</td>
+                                <td><span class="badge text-bg-secondary">{{ req.status|title }}</span></td>
+                                <td>{{ req.created_at.strftime('%d %b %Y') if req.created_at else '-' }}</td>
+                                <td><a href="{{ url_for('superadmin.demo_requests') }}">Update -></a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="8" class="text-muted">No demo requests found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body d-flex flex-wrap gap-2">
+                <a class="btn btn-sa-primary" href="{{ url_for('superadmin.properties') }}">View All Properties -></a>
+                <a class="btn btn-sa-primary" href="{{ url_for('superadmin.users') }}">Manage All Users -></a>
+                <a class="btn btn-sa-warning" href="{{ url_for('superadmin.system_health') }}">Check System Health -></a>
+                <a class="btn btn-sa-primary" href="{{ url_for('superadmin.billing') }}">View Platform Billing -></a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

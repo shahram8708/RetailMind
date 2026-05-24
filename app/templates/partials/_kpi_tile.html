@@ -1,0 +1,15 @@
+{% macro kpi_tile(title, value, icon='graph-up', color='var(--color-blue)', trend='') %}
+<div class="kpi-tile" style="border-left-color: {{ color }};">
+    <div>
+        <div class="kpi-title">{{ title }}</div>
+        <div class="kpi-value">{{ value }}</div>
+        {% if trend %}
+            {% set trend_class = 'negative' if ('down' in trend|lower or '-' in trend) else 'positive' %}
+            <div class="kpi-trend {{ trend_class }}">{{ trend }}</div>
+        {% endif %}
+    </div>
+    <div class="kpi-icon" style="background-color: {{ color }}1F; color: {{ color }};">
+        <span>{{ icon }}</span>
+    </div>
+</div>
+{% endmacro %}

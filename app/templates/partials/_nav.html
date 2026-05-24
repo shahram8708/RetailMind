@@ -1,0 +1,81 @@
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid px-3 px-lg-4">
+        <a class="navbar-brand" href="{{ url_for('dashboard.index') }}" data-route="dashboard">
+            RetailMind <span class="brand-dot"></span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#retailmindNav" aria-controls="retailmindNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="retailmindNav">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                {% if current_user.role != 'shopper' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}" data-route="dashboard">Dashboard</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['superadmin', 'mall_admin', 'store_manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('inventory.index') }}" data-route="inventory">Inventory</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['superadmin', 'mall_admin', 'marketing_manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('campaigns.index') }}" data-route="campaigns">Campaigns</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['superadmin', 'mall_admin', 'facility_manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('facility.index') }}" data-route="facility">Facility</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['superadmin', 'mall_admin', 'marketing_manager', 'facility_manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('analytics.index') }}" data-route="analytics">Analytics</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['superadmin', 'mall_admin', 'marketing_manager', 'facility_manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('agent.logs') }}" data-route="agent-logs">Agent Logs</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['superadmin', 'mall_admin', 'shopper'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('shopper.index') }}" data-route="shopper">Shopper</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 ms-lg-3">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="themeToggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Theme
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeToggle">
+                        <li><button class="dropdown-item" type="button" data-theme-value="system">System</button></li>
+                        <li><button class="dropdown-item" type="button" data-theme-value="light">Light</button></li>
+                        <li><button class="dropdown-item" type="button" data-theme-value="dark">Dark</button></li>
+                    </ul>
+                </div>
+
+                <a class="notification-bell text-white" href="{{ url_for('notifications.index') }}" aria-label="Notifications">
+                    <span class="fs-5">&#128276;</span>
+                    <span id="notif-count-badge" class="notif-badge">0</span>
+                </a>
+
+                <div class="dropdown">
+                    <div class="user-avatar" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ (current_user.full_name or 'U')[0] | upper }}
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('settings.profile') }}" data-route="account">My Account</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('settings.hub') }}" data-route="settings">Settings</a></li>
+                        {% if current_user.is_superadmin() %}
+                            <li><a class="dropdown-item sa-link" href="{{ url_for('superadmin.dashboard') }}" data-route="superadmin">⚡ Superadmin Panel</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ url_for('auth.logout') }}" class="px-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-link text-decoration-none p-0">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

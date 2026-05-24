@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopper Assistant{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shopper.css') }}">
+<style>
+    .navbar,
+    .site-footer {
+        display: none !important;
+    }
+
+    .main-content.authenticated {
+        padding-top: 0 !important;
+        min-height: 100vh;
+    }
+
+    .alerts-container {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shopper-page">
+    <header class="shopper-topbar">
+        <div class="shopper-topbar-brand">RetailMind</div>
+        <div class="shopper-topbar-property">{{ property.name if property else 'RetailMind Mall' }}</div>
+        <div class="shopper-topbar-badge">Powered by AI</div>
+    </header>
+
+    <section class="shopper-hero">
+        <div class="shopper-hero-tagline">🛍️ Find anything across all stores instantly</div>
+        <h1 class="shopper-hero-title">What are you looking for today?</h1>
+
+        <form id="shopperSearchForm" class="shopper-search-container" novalidate>
+            <input
+                id="shopperSearchInput"
+                class="shopper-search-input"
+                type="text"
+                autocomplete="off"
+                placeholder="Try 'Nike running shoes size 8 under ₹5000'..."
+            >
+            <button id="shopperSearchBtn" class="shopper-search-btn" type="submit">🔎 Search</button>
+        </form>
+
+        <div class="shopper-powered-text">Search powered by Google Gemini AI</div>
+
+        <div id="shopperSearchLoading" class="search-loading-overlay">
+            <div class="spinner-border text-light search-spinner" role="status" aria-hidden="true"></div>
+            <div class="text-light mt-3">Finding best matches...</div>
+        </div>
+    </section>
+
+    {% if promotions %}
+    <section class="shopper-section section-promotions">
+        <div class="container-fluid px-3 px-md-4">
+            <h4 class="section-title mb-3">🔥 Active Promotions in This Mall</h4>
+            <div class="promotions-strip">
+                {% for campaign, tenant in promotions %}
+                <article
+                    class="promotion-card"
+                    data-tenant-name="{{ tenant.name }}"
+                    title="Tap to search {{ tenant.name }}"
+                >
+                    <div class="fw-bold text-dark mb-1">{{ tenant.name }}</div>
+                    <div class="small fw-semibold text-teal mb-1">{{ campaign.campaign_name }}</div>
+                    <div class="small fst-italic text-muted mb-2">{{ (campaign.campaign_copy or '')[:80] }}{% if campaign.campaign_copy and campaign.campaign_copy|length > 80 %}...{% endif %}</div>
+                    <div class="small mb-2">
+                        <span class="badge text-bg-light border">Zone {{ tenant.zone }} · {{ 'Ground Floor' if tenant.floor == 0 else 'Floor ' ~ tenant.floor }}</span>
+                    </div>
+                    <div class="small text-muted mb-2">
+                        {% if campaign.channel == 'push_notification' %}📱{% elif campaign.channel == 'digital_signage' %}📺{% elif campaign.channel == 'email' %}📧{% elif campaign.channel == 'sms' %}💬{% else %}🖥️{% endif %}
+                        {{ campaign.channel|replace('_', ' ')|title }}
+                    </div>
+                    <div class="small fw-semibold text-primary">Tap to search this store →</div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_searches|length > 0 %}
+    <section id="recentSearchesSection" class="shopper-section">
+        <div class="container-fluid px-3 px-md-4 d-flex flex-wrap align-items-center gap-2">
+            <div class="small text-muted me-2">Your recent searches:</div>
+            {% for query in recent_searches %}
+            <button class="recent-search-tag" type="button">🔍 {{ query }}</button>
+            {% endfor %}
+            <button id="clearRecentSearchesBtn" class="btn btn-link btn-sm text-muted p-0 ms-auto" type="button">Clear</button>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="shopper-section pb-5">
+        <div class="container-fluid px-3 px-md-4">
+            <h4 class="section-title text-center mb-3">Browse by Category</h4>
+            <div class="category-grid">
+                <button class="category-btn" type="button" data-category="Fashion"><span class="cat-emoji">👗</span>Fashion</button>
+                <button class="category-btn" type="button" data-category="Footwear"><span class="cat-emoji">👟</span>Footwear</button>
+                <button class="category-btn" type="button" data-category="Electronics"><span class="cat-emoji">📱</span>Electronics</button>
+                <button class="category-btn" type="button" data-category="Jewellery"><span class="cat-emoji">💍</span>Jewellery</button>
+                <button class="category-btn" type="button" data-category="Food & Beverage"><span class="cat-emoji">🍔</span>Food & Beverage</button>
+                <button class="category-btn" type="button" data-category="Pharmacy"><span class="cat-emoji">💊</span>Pharmacy</button>
+                <button class="category-btn" type="button" data-category="Books"><span class="cat-emoji">📚</span>Books</button>
+                <button class="category-btn" type="button" data-category="Sportswear"><span class="cat-emoji">🏋️</span>Sportswear</button>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+const PROPERTY_ID = {{ property_id }};
+const SHOPPER_API_URL = "{{ url_for('api.shopper_search') }}";
+const CLEAR_RECENT_SEARCHES_URL = "{{ url_for('shopper.clear_recent_searches') }}";
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/shopper.js') }}"></script>
+{% endif %}
+{% endblock %}

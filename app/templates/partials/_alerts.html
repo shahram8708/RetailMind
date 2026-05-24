@@ -1,0 +1,18 @@
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <div class="alerts-container container mt-2">
+            {% for category, message in messages %}
+                {% set alert_class = {
+                    'success': 'alert-success',
+                    'danger': 'alert-danger',
+                    'warning': 'alert-warning',
+                    'info': 'alert-info'
+                }.get(category, 'alert-info') %}
+                <div class="alert {{ alert_class }} alert-dismissible fade show auto-dismiss" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}

@@ -1,0 +1,306 @@
+.analytics-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+}
+
+.roi-card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.roi-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid;
+}
+
+.roi-card.total {
+    background: var(--color-navy);
+    color: white;
+    border-left-color: var(--color-blue);
+}
+
+.roi-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.roi-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.roi-trend.positive {
+    color: var(--color-green);
+    font-size: 0.8rem;
+}
+
+.roi-trend.negative {
+    color: var(--color-red);
+    font-size: 0.8rem;
+}
+
+.roi-total .roi-value {
+    font-size: 2rem;
+    color: white;
+}
+
+.roi-total .roi-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.roi-total .roi-trend.positive {
+    color: #86EFAC;
+}
+
+.ai-summary-card {
+    background: linear-gradient(135deg, #EFF6FF 0%, #E0F2FE 100%);
+    border-radius: var(--border-radius-lg);
+    padding: 24px;
+    border: 1px solid #BFDBFE;
+}
+
+.ai-summary-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-teal);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.ai-summary-text {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-grey-900);
+}
+
+.charts-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.chart-card {
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+.chart-empty-state {
+    color: var(--color-grey-500);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.range-pill-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.range-pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--color-grey-200);
+    background: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all var(--transition-fast);
+    color: var(--color-grey-900);
+    text-decoration: none;
+}
+
+.range-pill.active {
+    background: var(--color-blue);
+    color: white;
+    border-color: var(--color-blue);
+}
+
+.custom-date-row {
+    display: none;
+    gap: 12px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.log-row {
+    transition: background var(--transition-fast);
+}
+
+.log-row.expandable {
+    cursor: pointer;
+}
+
+.log-row:hover {
+    background: var(--color-grey-100);
+}
+
+.log-expand-panel {
+    background: var(--color-grey-100);
+    border-top: none;
+    padding: 16px 24px;
+}
+
+.reasoning-text {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--color-grey-900);
+    border-left: 3px solid var(--color-blue);
+    padding-left: 12px;
+    font-style: italic;
+}
+
+.mission-badge {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.mission-badge.inventory {
+    background: #EFF6FF;
+    color: var(--color-blue);
+}
+
+.mission-badge.campaign {
+    background: #F0FDF4;
+    color: var(--color-teal);
+}
+
+.mission-badge.facility {
+    background: #FFF7ED;
+    color: var(--color-orange);
+}
+
+.mission-badge.shopper {
+    background: #ECFEFF;
+    color: var(--color-cyan);
+}
+
+.mission-badge.system {
+    background: var(--color-grey-100);
+    color: var(--color-grey-500);
+}
+
+.settings-section-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+}
+
+.mission-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.mission-toggle-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-grey-200);
+    border-radius: var(--border-radius-md);
+}
+
+.auto-approval-warning {
+    background: #FEF3C7;
+    border: 1px solid #FCD34D;
+    border-radius: var(--border-radius-sm);
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #92400E;
+    margin-top: 8px;
+    display: none;
+}
+
+.auto-approval-warning.visible {
+    display: block;
+}
+
+.threshold-slider-container {
+    padding: 14px;
+    border: 1px solid var(--color-grey-200);
+    border-radius: var(--border-radius-md);
+    background: var(--color-white);
+}
+
+.threshold-value-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.threshold-value-badge.lenient {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.threshold-value-badge.balanced {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.threshold-value-badge.strict {
+    background: #FFEDD5;
+    color: #C2410C;
+}
+
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.performance-bar-wrap {
+    width: 100%;
+    height: 7px;
+    background: var(--color-grey-200);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.performance-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-blue), var(--color-teal));
+}
+
+.monospace-small {
+    font-family: "Courier New", monospace;
+    font-size: 0.78rem;
+    color: var(--color-grey-500);
+}
+
+@media (max-width: 1199px) {
+    .roi-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 991px) {
+    .charts-2col {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .roi-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mission-toggle-grid {
+        grid-template-columns: 1fr;
+    }
+}

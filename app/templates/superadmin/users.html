@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}All Platform Users{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">All Platform Users</h2>
+                <div class="text-muted small">Showing {{ pagination.total }} users</div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('superadmin.users') }}" class="row g-2 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Search</label>
+                        <input class="form-control form-control-sm" type="text" name="search" value="{{ filters.search }}" placeholder="Name or email">
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label small">Role</label>
+                        <select class="form-select form-select-sm" name="role">
+                            <option value="all" {% if filters.role == 'all' %}selected{% endif %}>All</option>
+                            <option value="superadmin" {% if filters.role == 'superadmin' %}selected{% endif %}>Superadmin</option>
+                            <option value="mall_admin" {% if filters.role == 'mall_admin' %}selected{% endif %}>Mall Admin</option>
+                            <option value="store_manager" {% if filters.role == 'store_manager' %}selected{% endif %}>Store Manager</option>
+                            <option value="marketing_manager" {% if filters.role == 'marketing_manager' %}selected{% endif %}>Marketing Manager</option>
+                            <option value="facility_manager" {% if filters.role == 'facility_manager' %}selected{% endif %}>Facility Manager</option>
+                            <option value="shopper" {% if filters.role == 'shopper' %}selected{% endif %}>Shopper</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Property</label>
+                        <select class="form-select form-select-sm" name="property_id">
+                            <option value="0" {% if filters.property_id == 0 %}selected{% endif %}>All</option>
+                            {% for property in properties %}
+                            <option value="{{ property.id }}" {% if filters.property_id == property.id %}selected{% endif %}>{{ property.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label small">Active</label>
+                        <select class="form-select form-select-sm" name="active">
+                            <option value="all" {% if filters.active == 'all' %}selected{% endif %}>All</option>
+                            <option value="active" {% if filters.active == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if filters.active == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6 d-flex gap-2">
+                        <button class="btn btn-sa-primary btn-sm w-100" type="submit">Apply</button>
+                        <a class="btn btn-outline-secondary btn-sm w-100" href="{{ url_for('superadmin.users') }}">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Avatar</th>
+                                <th>Full Name + Email</th>
+                                <th>Role</th>
+                                <th>Property</th>
+                                <th>Verified</th>
+                                <th>Active</th>
+                                <th>Last Login</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user, property in pagination.items %}
+                            {% set is_current_user = current_user.id == user.id %}
+                            {% set is_owner = property and property.owner_user_id == user.id %}
+                            <tr id="user-row-{{ user.id }}" {% if not user.is_active %}class="sa-row-muted"{% endif %}>
+                                <td>{{ user.id }}</td>
+                                <td><span class="sa-avatar">{{ user.get_initials() }}</span></td>
+                                <td>
+                                    <div class="fw-semibold">{{ user.full_name }}</div>
+                                    <div class="small text-muted">{{ user.email }}</div>
+                                </td>
+                                <td>
+                                    <span id="role-badge-{{ user.id }}" class="badge {% if user.role == 'superadmin' %}text-bg-dark{% elif user.role == 'mall_admin' %}text-bg-primary{% elif user.role == 'store_manager' %}text-bg-info{% elif user.role == 'marketing_manager' %}text-bg-warning{% elif user.role == 'facility_manager' %}text-bg-secondary{% else %}text-bg-light text-dark{% endif %}">
+                                        {{ user.role|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td>{{ property.name if property else '-' }}</td>
+                                <td>
+                                    <span id="verified-indicator-{{ user.id }}" class="badge {% if user.is_verified %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                        {% if user.is_verified %}&#10003; Verified{% else %}Unverified{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span id="active-badge-{{ user.id }}" class="badge {% if user.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                        {{ 'Active' if user.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>{{ user.last_login.strftime('%d %b %Y %H:%M') if user.last_login else '-' }}</td>
+                                <td>{{ user.created_at.strftime('%d %b %Y') if user.created_at else '-' }}</td>
+                                <td>
+                                    {% if is_current_user %}
+                                    <span class="badge text-bg-info">Current User</span>
+                                    {% else %}
+                                    <div class="d-flex flex-column gap-1">
+                                        <select class="form-select form-select-sm select-change-role-sa" data-user-id="{{ user.id }}" title="Cannot set superadmin role from UI">
+                                            <option value="mall_admin" {% if user.role == 'mall_admin' %}selected{% endif %}>Mall Admin</option>
+                                            <option value="store_manager" {% if user.role == 'store_manager' %}selected{% endif %}>Store Manager</option>
+                                            <option value="marketing_manager" {% if user.role == 'marketing_manager' %}selected{% endif %}>Marketing Manager</option>
+                                            <option value="facility_manager" {% if user.role == 'facility_manager' %}selected{% endif %}>Facility Manager</option>
+                                            <option value="shopper" {% if user.role == 'shopper' %}selected{% endif %}>Shopper</option>
+                                        </select>
+                                        {% if not user.is_verified %}
+                                        <button class="btn btn-success btn-sm btn-verify-user" type="button" data-user-id="{{ user.id }}">Verify</button>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-toggle-active-user {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}" type="button" data-user-id="{{ user.id }}">
+                                            {% if user.is_active %}Deactivate{% else %}Reactivate{% endif %}
+                                        </button>
+                                        {% if user.role != 'superadmin' and not is_owner %}
+                                        <button class="btn btn-outline-danger btn-sm btn-delete-user" type="button" data-user-id="{{ user.id }}">Delete</button>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="10" class="text-muted">No users found for current filters.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ render_pagination(pagination) }}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+    <script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

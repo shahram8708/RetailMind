@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Features{% endblock %}
+
+{% block content %}
+<section class="section-light py-5">
+    <div class="container text-center">
+        <h1 class="section-title">RetailMind Feature Deep Dive</h1>
+        <p class="section-subtitle mx-auto">Each autonomous mission is purpose built for high traffic Indian malls with real-time operational complexity.</p>
+    </div>
+</section>
+
+<section class="feature-block section-light">
+    <div class="container">
+        <span class="feature-badge">Feature 1</span>
+        <h2>Inventory Watch Engine</h2>
+        <p><strong>What It Does:</strong> Continuously monitors SKU level demand, zone footfall, and supplier lead times to predict stockout risk scores in real time.</p>
+        <p><strong>Why It Matters:</strong> Prevents high margin product stockouts during peak windows and reduces emergency replenishment costs.</p>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <h6>Workflow</h6>
+                <ol>
+                    <li>Ingest sales velocity and stock snapshots every 15 minutes.</li>
+                    <li>Compute SKU Risk Score with seasonality and footfall context.</li>
+                    <li>Trigger approval-ready restock recommendations.</li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <h6>Input Data</h6>
+                <ul>
+                    <li>POS transactions</li>
+                    <li>Inventory levels</li>
+                    <li>Supplier SLA and lead time</li>
+                    <li>Zone wise foot traffic</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Output Generated</h6>
+                <ul>
+                    <li>SRS based restock alerts</li>
+                    <li>Priority queue by revenue impact</li>
+                    <li>Supplier action recommendations</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flow-diagram mt-4">
+            <div class="flow-box">Sales + Stock</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">SRS Model</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">Restock Action</div>
+        </div>
+    </div>
+</section>
+
+<section class="feature-block section-alt">
+    <div class="container">
+        <span class="feature-badge">Feature 2</span>
+        <h2>Campaign Activation Engine</h2>
+        <p><strong>What It Does:</strong> Detects promotional opportunity windows using traffic surges, weather context, and shopper intent patterns.</p>
+        <p><strong>Why It Matters:</strong> Improves campaign conversion while protecting budget from low probability activations.</p>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <h6>Workflow</h6>
+                <ol>
+                    <li>Track target zone movement and conversion trends.</li>
+                    <li>Score campaign opportunity in real time.</li>
+                    <li>Auto activate or request approval with suggested copy.</li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <h6>Input Data</h6>
+                <ul>
+                    <li>Footfall by hour and zone</li>
+                    <li>Weather and event context</li>
+                    <li>Historical campaign ROI</li>
+                    <li>Tenant inventory readiness</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Output Generated</h6>
+                <ul>
+                    <li>Opportunity score and channel recommendation</li>
+                    <li>Campaign copy drafts</li>
+                    <li>Post campaign conversion analytics</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flow-diagram mt-4">
+            <div class="flow-box">Traffic + Context</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">COS Engine</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">Campaign Launch</div>
+        </div>
+    </div>
+</section>
+
+<section class="feature-block section-light">
+    <div class="container">
+        <span class="feature-badge">Feature 3</span>
+        <h2>Facility Intelligence Engine</h2>
+        <p><strong>What It Does:</strong> Watches sensor telemetry across mission critical equipment and flags rising anomaly trends before failure.</p>
+        <p><strong>Why It Matters:</strong> Avoids expensive emergency repairs, improves uptime, and protects mall customer experience.</p>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <h6>Workflow</h6>
+                <ol>
+                    <li>Collect vibration, temperature, and electrical readings.</li>
+                    <li>Compute failure propensity score for each asset.</li>
+                    <li>Generate preventive work order recommendations.</li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <h6>Input Data</h6>
+                <ul>
+                    <li>IoT sensor streams</li>
+                    <li>Equipment maintenance history</li>
+                    <li>Utilization and age factors</li>
+                    <li>Anomaly z score trends</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Output Generated</h6>
+                <ul>
+                    <li>FPS alert feed</li>
+                    <li>Work order priorities</li>
+                    <li>Risk scored maintenance plan</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flow-diagram mt-4">
+            <div class="flow-box">Sensor Data</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">Anomaly Model</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">Work Order</div>
+        </div>
+    </div>
+</section>
+
+<section class="feature-block section-alt">
+    <div class="container">
+        <span class="feature-badge">Feature 4</span>
+        <h2>Shopper Navigation Agent</h2>
+        <p><strong>What It Does:</strong> Interprets natural language shopper queries and returns exact store and product guidance in seconds.</p>
+        <p><strong>Why It Matters:</strong> Reduces walk aways, increases conversion, and gives mall operators a measurable service advantage.</p>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <h6>Workflow</h6>
+                <ol>
+                    <li>Capture shopper intent from query text.</li>
+                    <li>Match inventory across tenants by relevance.</li>
+                    <li>Return zone, floor, and product level guidance.</li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <h6>Input Data</h6>
+                <ul>
+                    <li>Shopper search text</li>
+                    <li>Live inventory index</li>
+                    <li>Mall zone and floor map</li>
+                    <li>Product attribute metadata</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Output Generated</h6>
+                <ul>
+                    <li>Relevant store shortlist</li>
+                    <li>Fast route hints</li>
+                    <li>Interaction and conversion insights</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flow-diagram mt-4">
+            <div class="flow-box">User Query</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">Intent + Search</div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-box">Guided Result</div>
+        </div>
+    </div>
+</section>
+
+<section class="section-dark text-center">
+    <div class="container">
+        <h2 class="section-title text-white">See It In Action</h2>
+        <a class="btn btn-primary btn-lg mt-3" href="{{ url_for('public.demo') }}">Request Demo</a>
+    </div>
+</section>
+{% endblock %}

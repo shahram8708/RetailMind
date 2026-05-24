@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing{% endblock %}
+
+{% block content %}
+<section class="section-light py-5">
+    <div class="container text-center">
+        <h1 class="section-title">Simple Pricing for Intelligent Mall Operations</h1>
+        <p class="section-subtitle mx-auto">Choose a plan that matches your property scale and operational complexity.</p>
+        <div class="billing-toggle d-inline-flex align-items-center gap-2 mt-2">
+            <button class="btn btn-sm btn-primary" id="monthly-plan-btn" type="button">Monthly</button>
+            <button class="btn btn-sm btn-outline-primary" id="annual-plan-btn" type="button">Annual (Save 20%)</button>
+        </div>
+    </div>
+</section>
+
+<section class="section-alt pt-3 pb-5">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="pricing-card" data-monthly="INR 49,999/mo" data-annual="INR 39,999/mo">
+                    <h4>Starter</h4>
+                    <p class="pricing-amount">INR 49,999/mo</p>
+                    <ul>
+                        <li>&#10003; Inventory Watch Engine</li>
+                        <li>&#10003; Basic campaign opportunities</li>
+                        <li>&#10003; Up to 50 tenant stores</li>
+                        <li>&#10003; Email support</li>
+                    </ul>
+                    <a class="btn btn-outline-primary w-100" href="{{ url_for('auth.register', plan='starter') }}">Choose Starter</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="pricing-card featured" data-monthly="INR 1,49,999/mo" data-annual="INR 1,19,999/mo">
+                    <span class="featured-badge">Most Popular</span>
+                    <h4>Professional</h4>
+                    <p class="pricing-amount">INR 1,49,999/mo</p>
+                    <ul>
+                        <li>&#10003; All 4 autonomous agents</li>
+                        <li>&#10003; Predictive facility intelligence</li>
+                        <li>&#10003; Campaign auto activation controls</li>
+                        <li>&#10003; Priority support and onboarding</li>
+                    </ul>
+                    <a class="btn btn-primary w-100" href="{{ url_for('auth.register', plan='professional') }}">Choose Professional</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="pricing-card" data-monthly="Contact Sales" data-annual="Contact Sales">
+                    <h4>Enterprise</h4>
+                    <p class="pricing-amount">Contact Sales</p>
+                    <ul>
+                        <li>&#10003; Multi property control center</li>
+                        <li>&#10003; Advanced custom integrations</li>
+                        <li>&#10003; Dedicated success engineering</li>
+                        <li>&#10003; SLA backed support</li>
+                    </ul>
+                    <a class="btn btn-outline-primary w-100" href="{{ url_for('public.demo') }}">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-light">
+    <div class="container">
+        <h2 class="section-title text-center mb-4">Feature Comparison</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Starter</th>
+                        <th>Professional</th>
+                        <th>Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Inventory Watch Engine</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>Campaign Activation Engine</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>Facility Intelligence Engine</td><td>&#10007;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>Shopper Navigation Agent</td><td>&#10007;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                    <tr><td>Custom API Integrations</td><td>&#10007;</td><td>&#10007;</td><td>&#10003;</td></tr>
+                    <tr><td>Multi Property Management</td><td>&#10007;</td><td>&#10007;</td><td>&#10003;</td></tr>
+                    <tr><td>Dedicated Success Manager</td><td>&#10007;</td><td>&#10007;</td><td>&#10003;</td></tr>
+                    <tr><td>Priority Support</td><td>&#10007;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="section-alt">
+    <div class="container">
+        <h2 class="section-title text-center mb-4">Frequently Asked Questions</h2>
+        <div class="accordion" id="pricingFaq">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqOneBody">Is payment secure?</button>
+                </h2>
+                <div id="faqOneBody" class="accordion-collapse collapse show" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">Yes. Payments are processed through secure payment rails with encryption and audit logging.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwoBody">Can I cancel anytime?</button>
+                </h2>
+                <div id="faqTwoBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">Yes. You can cancel your subscription at any time from your billing settings.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThreeBody">Is there a free trial?</button>
+                </h2>
+                <div id="faqThreeBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">Yes. We provide a guided trial period for qualified mall operators.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqFour">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFourBody">What payment methods are accepted?</button>
+                </h2>
+                <div id="faqFourBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">UPI, net banking, cards, and enterprise invoicing options are supported.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqFive">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFiveBody">Is GST included?</button>
+                </h2>
+                <div id="faqFiveBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">Listed prices are base subscription charges. Applicable GST is added on invoices.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqSix">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSixBody">Can I use RetailMind for multiple properties?</button>
+                </h2>
+                <div id="faqSixBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">Yes. Multi property orchestration is available in Enterprise plans.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqSeven">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSevenBody">Do you offer customization?</button>
+                </h2>
+                <div id="faqSevenBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">Yes. Enterprise onboarding includes custom integrations and workflow extensions.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqEight">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqEightBody">What data do I need to get started?</button>
+                </h2>
+                <div id="faqEightBody" class="accordion-collapse collapse" data-bs-parent="#pricingFaq">
+                    <div class="accordion-body">POS sales, inventory snapshots, mall layout metadata, and optional IoT feeds are enough to begin.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const monthlyBtn = document.getElementById('monthly-plan-btn');
+        const annualBtn = document.getElementById('annual-plan-btn');
+        const cards = document.querySelectorAll('.pricing-card');
+
+        function applyMode(mode) {
+            cards.forEach(function (card) {
+                const amount = card.querySelector('.pricing-amount');
+                amount.textContent = mode === 'annual' ? card.dataset.annual : card.dataset.monthly;
+            });
+
+            if (mode === 'annual') {
+                annualBtn.classList.remove('btn-outline-primary');
+                annualBtn.classList.add('btn-primary');
+                monthlyBtn.classList.remove('btn-primary');
+                monthlyBtn.classList.add('btn-outline-primary');
+            } else {
+                monthlyBtn.classList.remove('btn-outline-primary');
+                monthlyBtn.classList.add('btn-primary');
+                annualBtn.classList.remove('btn-primary');
+                annualBtn.classList.add('btn-outline-primary');
+            }
+        }
+
+        monthlyBtn.addEventListener('click', function () { applyMode('monthly'); });
+        annualBtn.addEventListener('click', function () { applyMode('annual'); });
+    });
+</script>
+{% endblock %}

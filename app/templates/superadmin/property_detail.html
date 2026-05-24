@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}Property: {{ property.name }}{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">Property: {{ property.name }}</h2>
+                <div class="text-muted small">Superadmin drill down view for property id {{ property.id }}</div>
+            </div>
+            <a class="btn btn-outline-secondary" href="{{ url_for('superadmin.properties') }}">Back to All Properties</a>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="row g-2 small">
+                            <div class="col-md-6"><strong>Name:</strong> {{ property.name }}</div>
+                            <div class="col-md-6"><strong>City:</strong> {{ property.city or '-' }}</div>
+                            <div class="col-md-6"><strong>Country:</strong> {{ property.country or '-' }}</div>
+                            <div class="col-md-6"><strong>Location:</strong> {{ property.location or '-' }}</div>
+                            <div class="col-md-6"><strong>Total Area:</strong> {{ property.total_area_sqft or '-' }} sqft</div>
+                            <div class="col-md-6"><strong>Floors:</strong> {{ property.num_floors or '-' }}</div>
+                            <div class="col-md-6"><strong>Owner User ID:</strong> {{ property.owner_user_id or '-' }}</div>
+                            <div class="col-md-6"><strong>Subscription Tier:</strong> <span id="tier-badge-{{ property.id }}" class="badge {% if property.subscription_tier == 'enterprise' %}badge-tier-enterprise{% elif property.subscription_tier == 'professional' %}badge-tier-professional{% else %}badge-tier-starter{% endif %}">{{ property.subscription_tier|title }}</span></div>
+                            <div class="col-md-6"><strong>Onboarding Status:</strong> {% if property.onboarding_complete %}<span class="badge text-bg-success">Complete</span>{% else %}<span class="badge text-bg-warning">Pending Setup</span>{% endif %}</div>
+                            <div class="col-md-6"><strong>ES Index Prefix:</strong> {{ property.elasticsearch_index_prefix or '-' }}</div>
+                            <div class="col-md-6"><strong>Created At:</strong> {{ property.created_at.strftime('%d %b %Y %H:%M') if property.created_at else '-' }}</div>
+                            <div class="col-md-6"><strong>Subscription:</strong> {{ subscription.status|title if subscription else 'None' }}</div>
+                            <div class="col-md-6"><strong>Plan:</strong> {{ subscription.plan_name|title if subscription else property.subscription_tier|title }}</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-flex flex-column gap-2">
+                        <button
+                            type="button"
+                            class="btn btn-sa-primary btn-change-tier"
+                            data-property-id="{{ property.id }}"
+                            data-current-tier="{{ property.subscription_tier }}"
+                        >Change Tier</button>
+                        <button
+                            type="button"
+                            class="btn btn-sa-danger btn-suspend-property"
+                            data-property-id="{{ property.id }}"
+                        >Suspend All Users</button>
+                        <a class="btn btn-outline-secondary" href="{{ url_for('agent.settings') }}">View Agent Config</a>
+                        <a class="btn btn-sa-warning" href="{{ url_for('dashboard.index', view_property_id=property.id) }}">Go to Dashboard (as this property)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ tenants|length }}</div>
+                    <div class="sa-kpi-label">Tenant Count</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ users|length }}</div>
+                    <div class="sa-kpi-label">User Count</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ active_campaign_count }}</div>
+                    <div class="sa-kpi-label">Active Campaigns</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ open_work_order_count }}</div>
+                    <div class="sa-kpi-label">Open Work Orders</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="propertyDetailTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="team-tab" data-bs-toggle="tab" data-bs-target="#team-pane" type="button" role="tab">Team Members</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tenants-tab" data-bs-toggle="tab" data-bs-target="#tenants-pane" type="button" role="tab">Tenants</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-pane" type="button" role="tab">Recent Activity</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content pt-3">
+                    <div class="tab-pane fade show active" id="team-pane" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Active</th>
+                                        <th>Last Login</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>{{ user.full_name }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.role|replace('_', ' ')|title }}</td>
+                                        <td>
+                                            <span class="badge {% if user.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                                {{ 'Active' if user.is_active else 'Inactive' }}
+                                            </span>
+                                        </td>
+                                        <td>{{ user.last_login.strftime('%d %b %Y %H:%M') if user.last_login else '-' }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="5" class="text-muted">No users found for this property.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tenants-pane" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>Zone</th>
+                                        <th>Floor</th>
+                                        <th>Active</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tenant in tenants %}
+                                    <tr>
+                                        <td>{{ tenant.name }}</td>
+                                        <td>{{ tenant.category or '-' }}</td>
+                                        <td>{{ tenant.zone or '-' }}</td>
+                                        <td>{{ tenant.floor }}</td>
+                                        <td>
+                                            <span class="badge {% if tenant.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                                {{ 'Active' if tenant.is_active else 'Inactive' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="5" class="text-muted">No tenants found for this property.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="activity-pane" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Mission</th>
+                                        <th>Action</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for action in recent_agent_actions %}
+                                    <tr>
+                                        <td>#{{ action.id }}</td>
+                                        <td>{{ action.mission_type|title }}</td>
+                                        <td>{{ action.action_type|replace('_', ' ')|title }}</td>
+                                        <td>{{ action.description|truncate(100) }}</td>
+                                        <td><span class="badge text-bg-secondary">{{ action.status|replace('_', ' ')|title }}</span></td>
+                                        <td>{{ action.created_at.strftime('%d %b %Y %H:%M') if action.created_at else '-' }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="6" class="text-muted">No recent agent activity.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white fw-semibold">Recent Campaigns</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                        <th>Score</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for campaign in recent_campaigns %}
+                                    <tr>
+                                        <td>{{ campaign.campaign_name }}</td>
+                                        <td>{{ campaign.status|replace('_', ' ')|title }}</td>
+                                        <td>{{ campaign.opportunity_score|round(2) }}</td>
+                                        <td>{{ campaign.created_at.strftime('%d %b %Y') if campaign.created_at else '-' }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-muted">No campaigns found.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white fw-semibold">Recent Work Orders</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for wo in recent_work_orders %}
+                                    <tr>
+                                        <td>{{ wo.title }}</td>
+                                        <td>{{ wo.priority|title }}</td>
+                                        <td>{{ wo.status|replace('_', ' ')|title }}</td>
+                                        <td>{{ wo.created_at.strftime('%d %b %Y') if wo.created_at else '-' }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-muted">No work orders found.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="changeTierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Property Tier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changeTierForm">
+                <div class="modal-body">
+                    <input type="hidden" id="changeTierPropertyId" value="{{ property.id }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-2 small text-muted">Current tier: <span id="currentTierLabel">{{ property.subscription_tier|title }}</span></div>
+                    <label class="form-label">Select New Tier</label>
+                    <select class="form-select" id="tierSelect" required>
+                        <option value="starter" {% if property.subscription_tier == 'starter' %}selected{% endif %}>Starter</option>
+                        <option value="professional" {% if property.subscription_tier == 'professional' %}selected{% endif %}>Professional</option>
+                        <option value="enterprise" {% if property.subscription_tier == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sa-primary">Change Tier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endblock %}

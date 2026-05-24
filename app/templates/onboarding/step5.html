@@ -1,0 +1,100 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block step_content %}
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Setup Summary</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted">Property</dt>
+                    <dd class="col-7">{{ property.name or 'Not set' }}</dd>
+
+                    <dt class="col-5 text-muted">City</dt>
+                    <dd class="col-7">{{ property.city or 'Not set' }}</dd>
+
+                    <dt class="col-5 text-muted">Floors</dt>
+                    <dd class="col-7">{{ property.num_floors or 0 }}</dd>
+
+                    <dt class="col-5 text-muted">Tenants Added</dt>
+                    <dd class="col-7">{{ tenants_count }}</dd>
+
+                    <dt class="col-5 text-muted">Integrations</dt>
+                    <dd class="col-7">{{ integrations_count }} connected</dd>
+
+                    <dt class="col-5 text-muted">SRS Threshold</dt>
+                    <dd class="col-7">{{ '%.2f'|format((agent_config.inventory_srs_threshold if agent_config else 0.70)) }}</dd>
+
+                    <dt class="col-5 text-muted">COS Threshold</dt>
+                    <dd class="col-7">{{ '%.2f'|format((agent_config.campaign_cos_threshold if agent_config else 0.75)) }}</dd>
+
+                    <dt class="col-5 text-muted">FPS Threshold</dt>
+                    <dd class="col-7">{{ '%.2f'|format((agent_config.facility_fps_threshold if agent_config else 0.65)) }}</dd>
+
+                    <dt class="col-5 text-muted">Auto Approvals</dt>
+                    <dd class="col-7">
+                        <div>Restock: {{ 'On' if agent_config and agent_config.auto_approve_restock else 'Off' }}</div>
+                        <div>Campaigns: {{ 'On' if agent_config and agent_config.auto_approve_campaigns else 'Off' }}</div>
+                        <div>Maintenance: {{ 'On' if agent_config and agent_config.auto_approve_maintenance else 'Off' }}</div>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Notification Preferences</div>
+            <div class="card-body">
+                <h6 class="mb-3">Alert Channels</h6>
+                <div class="form-check form-switch mb-2">
+                    {{ form.email_alerts_enabled(class='form-check-input', id='email-alerts-enabled') }}
+                    <label class="form-check-label" for="email-alerts-enabled">{{ form.email_alerts_enabled.label.text }}</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    {{ form.inapp_alerts_enabled(class='form-check-input', id='inapp-alerts-enabled') }}
+                    <label class="form-check-label" for="inapp-alerts-enabled">{{ form.inapp_alerts_enabled.label.text }}</label>
+                </div>
+                <div class="form-check form-switch mb-4">
+                    {{ form.sms_alerts_enabled(class='form-check-input', id='sms-alerts-enabled') }}
+                    <label class="form-check-label" for="sms-alerts-enabled">{{ form.sms_alerts_enabled.label.text }}</label>
+                </div>
+
+                <h6 class="mb-3">Alert Categories</h6>
+                <div class="form-check form-switch mb-2">
+                    {{ form.notify_inventory(class='form-check-input', id='notify-inventory') }}
+                    <label class="form-check-label" for="notify-inventory">{{ form.notify_inventory.label.text }}</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    {{ form.notify_campaigns(class='form-check-input', id='notify-campaigns') }}
+                    <label class="form-check-label" for="notify-campaigns">{{ form.notify_campaigns.label.text }}</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    {{ form.notify_facility(class='form-check-input', id='notify-facility') }}
+                    <label class="form-check-label" for="notify-facility">{{ form.notify_facility.label.text }}</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    {{ form.notify_agent_actions(class='form-check-input', id='notify-agent-actions') }}
+                    <label class="form-check-label" for="notify-agent-actions">{{ form.notify_agent_actions.label.text }}</label>
+                </div>
+                <div class="form-check form-switch mb-4">
+                    {{ form.notify_weekly_summary(class='form-check-input', id='notify-weekly-summary') }}
+                    <label class="form-check-label" for="notify-weekly-summary">{{ form.notify_weekly_summary.label.text }}</label>
+                </div>
+
+                <h6 class="mb-2">Notification Frequency</h6>
+                {% for subfield in form.notification_frequency %}
+                    <div class="form-check mb-2">
+                        {{ subfield(class='form-check-input', id=subfield.id) }}
+                        <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-success mt-4 mb-0">
+    &#127881; You're almost there! Once you complete setup, your 4 AI agents will immediately begin monitoring your mall.
+</div>
+{% endblock %}

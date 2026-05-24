@@ -1,0 +1,190 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block step_content %}
+<p class="text-muted">
+    Add your tenant stores below. You can add up to 50 stores during setup and more later from Settings -> Team and Tenants.
+</p>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="fw-semibold" id="tenant-row-counter">0 stores added</div>
+    <button type="button" class="btn btn-outline-primary btn-sm" id="add-tenant-btn">+ Add Another Store</button>
+</div>
+
+<div class="table-responsive">
+    <table class="table align-middle" id="tenant-table">
+        <thead>
+            <tr>
+                <th style="width: 50px;">#</th>
+                <th>Store Name</th>
+                <th>Category</th>
+                <th>Zone</th>
+                <th>Floor</th>
+                <th>Unit Number</th>
+                <th>Contact Email</th>
+                <th style="width: 90px;">Action</th>
+            </tr>
+        </thead>
+        <tbody id="tenant-table-body"></tbody>
+    </table>
+</div>
+
+{{ form.tenants_json(id='tenants-json-field') }}
+
+<div class="form-check mt-3">
+    {{ form.skip_for_now(class='form-check-input', id='skip-for-now') }}
+    <label class="form-check-label" for="skip-for-now">
+        I'll add tenants later. I understand I'll need to add at least one tenant before agent missions can run.
+    </label>
+</div>
+
+{% for error in form.tenants_json.errors %}
+    <div class="text-danger small mt-2">{{ error }}</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const tableBody = document.getElementById('tenant-table-body');
+        const addTenantBtn = document.getElementById('add-tenant-btn');
+        const tenantsJsonField = document.getElementById('tenants-json-field');
+        const onboardingForm = document.getElementById('onboarding-form');
+        const rowCounter = document.getElementById('tenant-row-counter');
+        const skipForNow = document.getElementById('skip-for-now');
+        const existingTenants = {{ existing_tenants | tojson | safe }} || [];
+
+        function tenantRowTemplate(tenant = {}) {
+            const safeName = tenant.name || '';
+            const safeCategory = tenant.category || '';
+            const safeZone = tenant.zone || '';
+            const safeFloor = tenant.floor !== undefined && tenant.floor !== null ? tenant.floor : '';
+            const safeUnit = tenant.unit_number || '';
+            const safeEmail = tenant.contact_email || '';
+
+            return `
+                <tr>
+                    <td class="tenant-index"></td>
+                    <td><input type="text" class="form-control tenant-name" placeholder="e.g. Zara Fashion" value="${safeName}" /></td>
+                    <td>
+                        <select class="form-select tenant-category">
+                            <option value="">Select</option>
+                            <option value="Fashion" ${safeCategory === 'Fashion' ? 'selected' : ''}>Fashion</option>
+                            <option value="Sportswear" ${safeCategory === 'Sportswear' ? 'selected' : ''}>Sportswear</option>
+                            <option value="Electronics" ${safeCategory === 'Electronics' ? 'selected' : ''}>Electronics</option>
+                            <option value="Footwear" ${safeCategory === 'Footwear' ? 'selected' : ''}>Footwear</option>
+                            <option value="Jewellery" ${safeCategory === 'Jewellery' ? 'selected' : ''}>Jewellery</option>
+                            <option value="Food & Beverage" ${safeCategory === 'Food & Beverage' ? 'selected' : ''}>Food & Beverage</option>
+                            <option value="Pharmacy" ${safeCategory === 'Pharmacy' ? 'selected' : ''}>Pharmacy</option>
+                            <option value="Books" ${safeCategory === 'Books' ? 'selected' : ''}>Books</option>
+                            <option value="Toys & Games" ${safeCategory === 'Toys & Games' ? 'selected' : ''}>Toys & Games</option>
+                            <option value="Home & Decor" ${safeCategory === 'Home & Decor' ? 'selected' : ''}>Home & Decor</option>
+                            <option value="Beauty & Personal Care" ${safeCategory === 'Beauty & Personal Care' ? 'selected' : ''}>Beauty & Personal Care</option>
+                            <option value="Entertainment" ${safeCategory === 'Entertainment' ? 'selected' : ''}>Entertainment</option>
+                            <option value="Services" ${safeCategory === 'Services' ? 'selected' : ''}>Services</option>
+                            <option value="Other" ${safeCategory === 'Other' ? 'selected' : ''}>Other</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-select tenant-zone">
+                            <option value="">Select</option>
+                            <option value="A" ${safeZone === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${safeZone === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${safeZone === 'C' ? 'selected' : ''}>C</option>
+                            <option value="D" ${safeZone === 'D' ? 'selected' : ''}>D</option>
+                            <option value="E" ${safeZone === 'E' ? 'selected' : ''}>E</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="form-control tenant-floor" min="0" max="20" value="${safeFloor}" /></td>
+                    <td><input type="text" class="form-control tenant-unit" placeholder="e.g. A-101" value="${safeUnit}" /></td>
+                    <td><input type="email" class="form-control tenant-email" placeholder="store@example.com" value="${safeEmail}" /></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-tenant-btn">Remove</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function updateRowMeta() {
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach((row, idx) => {
+                const indexCell = row.querySelector('.tenant-index');
+                if (indexCell) {
+                    indexCell.textContent = String(idx + 1);
+                }
+            });
+            rowCounter.textContent = `${rows.length} stores added`;
+        }
+
+        function addTenantRow(tenant = {}) {
+            const existingRows = tableBody.querySelectorAll('tr').length;
+            if (existingRows >= 50) {
+                showToast('You can add up to 50 stores during onboarding.', 'warning');
+                return;
+            }
+
+            tableBody.insertAdjacentHTML('beforeend', tenantRowTemplate(tenant));
+            updateRowMeta();
+        }
+
+        function removeTenantRow(button) {
+            const row = button.closest('tr');
+            if (!row) {
+                return;
+            }
+            row.remove();
+            updateRowMeta();
+        }
+
+        function serializeTenants() {
+            const rows = tableBody.querySelectorAll('tr');
+            const tenants = [];
+
+            rows.forEach((row) => {
+                tenants.push({
+                    name: (row.querySelector('.tenant-name')?.value || '').trim(),
+                    category: row.querySelector('.tenant-category')?.value || '',
+                    zone: row.querySelector('.tenant-zone')?.value || '',
+                    floor: (row.querySelector('.tenant-floor')?.value || '').trim(),
+                    unit_number: (row.querySelector('.tenant-unit')?.value || '').trim(),
+                    contact_email: (row.querySelector('.tenant-email')?.value || '').trim()
+                });
+            });
+
+            tenantsJsonField.value = JSON.stringify(tenants);
+            return tenants;
+        }
+
+        function hasAtLeastOneCompleteTenant(tenants) {
+            return tenants.some((tenant) => (
+                tenant.name && tenant.category && tenant.zone && tenant.floor !== '' && tenant.unit_number
+            ));
+        }
+
+        addTenantBtn.addEventListener('click', function () {
+            addTenantRow();
+        });
+
+        tableBody.addEventListener('click', function (event) {
+            const button = event.target.closest('.remove-tenant-btn');
+            if (button) {
+                removeTenantRow(button);
+            }
+        });
+
+        onboardingForm.addEventListener('submit', function (event) {
+            const tenants = serializeTenants();
+            if (!skipForNow.checked && !hasAtLeastOneCompleteTenant(tenants)) {
+                event.preventDefault();
+                showToast('Please add at least one complete tenant row or choose skip for now.', 'error');
+            }
+        });
+
+        if (existingTenants.length > 0) {
+            existingTenants.forEach((tenant) => addTenantRow(tenant));
+        } else {
+            addTenantRow();
+        }
+    });
+</script>
+{% endblock %}

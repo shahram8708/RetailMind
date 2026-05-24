@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Facility Intelligence{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/facility.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="facility-page page-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-0">&#128295; Facility Intelligence Engine</h2>
+            <div class="text-muted small">Predictive maintenance powered by FPS algorithm</div>
+        </div>
+        <button
+            type="button"
+            class="btn btn-primary btn-create-work-order"
+            data-equipment-id=""
+            data-equipment-name="General Work Order"
+        >Create Work Order</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-start border-4 border-secondary">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Total Equipment Monitored</div>
+                    <div class="fs-4 fw-bold">{{ total_equipment }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-start border-4 {% if critical_alerts_today > 0 %}border-danger{% else %}border-success{% endif %}">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Critical Alerts Today</div>
+                    <div class="fs-4 fw-bold">{{ critical_alerts_today }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Work Orders Completed (This Month)</div>
+                    <div class="fs-4 fw-bold">{{ work_orders_completed_month }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">Maintenance Cost Saved (This Month)</div>
+                    <div class="fs-4 fw-bold">&#8377;{{ maintenance_cost_saved_month | format_inr }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <a
+                        href="{{ url_for('facility.index', equipment_type=filters.equipment_type or None, status=filters.status_filter) }}"
+                        class="btn btn-sm floor-filter-btn {% if filters.floor is none %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                        data-floor="all"
+                    >All Floors</a>
+                    {% for floor in available_floors %}
+                        <a
+                            href="{{ url_for('facility.index', floor=floor, equipment_type=filters.equipment_type or None, status=filters.status_filter) }}"
+                            class="btn btn-sm floor-filter-btn {% if filters.floor == floor %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                            data-floor="{{ floor }}"
+                        >{% if floor == 0 %}Ground Floor{% else %}Floor {{ floor }}{% endif %}</a>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <label for="equipment-type-filter" class="small text-muted mb-0">Equipment Type</label>
+                    <select id="equipment-type-filter" class="form-select form-select-sm" style="min-width: 180px;">
+                        <option value="">All Types</option>
+                        {% for equipment_type in available_equipment_types %}
+                            <option value="{{ equipment_type | lower }}" {% if filters.equipment_type == (equipment_type | lower) %}selected{% endif %}>{{ equipment_type | replace('_', ' ') | title }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="status-filter" class="small text-muted mb-0">Status</label>
+                    <select id="status-filter" class="form-select form-select-sm" style="min-width: 160px;">
+                        <option value="all" {% if filters.status_filter == 'all' %}selected{% endif %}>All Status</option>
+                        <option value="healthy" {% if filters.status_filter == 'healthy' %}selected{% endif %}>Healthy</option>
+                        <option value="monitor" {% if filters.status_filter == 'monitor' %}selected{% endif %}>Monitor</option>
+                        <option value="risk" {% if filters.status_filter == 'risk' %}selected{% endif %}>At Risk</option>
+                        <option value="critical" {% if filters.status_filter == 'critical' %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="equipment-grid mb-4">
+        {% for equipment in equipment_list %}
+            {% set fps_meta = get_fps_label(equipment.fps_score or 0) %}
+            {% set fps_percent = ((equipment.fps_score or 0) * 100) | round(1) %}
+            {% set equipment_icon = '&#128295;' %}
+            {% if equipment.equipment_type == 'escalator' %}
+                {% set equipment_icon = '&#128694;' %}
+            {% elif equipment.equipment_type == 'elevator' %}
+                {% set equipment_icon = '&#128727;' %}
+            {% elif equipment.equipment_type == 'hvac' %}
+                {% set equipment_icon = '&#10052;&#65039;' %}
+            {% elif equipment.equipment_type == 'generator' %}
+                {% set equipment_icon = '&#9889;' %}
+            {% elif equipment.equipment_type == 'fire_alarm' %}
+                {% set equipment_icon = '&#128293;' %}
+            {% elif equipment.equipment_type == 'parking_sensor' %}
+                {% set equipment_icon = '&#128664;' %}
+            {% elif equipment.equipment_type == 'restroom_sensor' %}
+                {% set equipment_icon = '&#128701;' %}
+            {% endif %}
+
+            <div
+                class="equipment-card {{ fps_meta.class }}"
+                data-floor="{{ equipment.floor }}"
+                data-equipment-type="{{ equipment.equipment_type | lower }}"
+            >
+                <div class="equipment-card-header">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="fw-semibold">{{ equipment_icon | safe }} {{ equipment.equipment_name }}</div>
+                        <span class="badge bg-light text-dark border">{{ equipment.equipment_type | replace('_', ' ') | title }}</span>
+                    </div>
+                </div>
+                <div class="equipment-card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot {% if fps_meta.class == 'fps-healthy' %}bg-success{% elif fps_meta.class == 'fps-monitor' %}bg-warning{% elif fps_meta.class == 'fps-risk' %}bg-orange{% else %}bg-danger{% endif %}"></span>
+                            <span class="fw-semibold">{{ fps_meta.label }}</span>
+                        </div>
+                        <span class="fw-semibold">{{ fps_percent }}%</span>
+                    </div>
+
+                    <div class="fps-bar-container">
+                        <div class="fps-bar-fill {{ fps_meta.class }}" style="width: {{ fps_percent }}%;"></div>
+                    </div>
+
+                    <div class="small text-muted mt-2">Zone <span class="badge bg-light text-dark border">{{ equipment.zone or '-' }}</span> | Floor {{ equipment.floor }}</div>
+                    <div class="small text-muted">Last Serviced: {{ equipment.last_serviced | relative_time }}</div>
+                    <div class="small text-muted">Age: {% if equipment_age_years[equipment.id] is not none %}{{ equipment_age_years[equipment.id] }} years{% else %}Unknown{% endif %}</div>
+
+                    {% if equipment.id in anomaly_equipment_ids %}
+                        <div class="anomaly-banner">
+                            <span>&#9888;&#65039;</span>
+                            <span>Active Anomaly Detected</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{{ url_for('facility.detail', equipment_id=equipment.id) }}" class="btn btn-sm btn-outline-primary flex-grow-1">View Details -&gt;</a>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary btn-create-work-order"
+                            data-equipment-id="{{ equipment.id }}"
+                            data-equipment-name="{{ equipment.equipment_name }}"
+                        >Create Work Order</button>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card p-4 text-center text-muted">No equipment found for the selected filters.</div>
+        {% endfor %}
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">&#9889; Active Sensor Anomalies (Last 24 Hours)</div>
+            <span class="badge {% if active_anomalies|length > 0 %}bg-danger{% else %}bg-success{% endif %}">{{ active_anomalies|length }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if not active_anomalies %}
+                <div class="p-4 text-success fw-semibold">&#9989; All equipment readings are within normal ranges.</div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Zone/Floor</th>
+                                <th>Metric</th>
+                                <th>Current Value</th>
+                                <th>Normal Range (Mean +/- 2.5&#963;)</th>
+                                <th>Z Score</th>
+                                <th>Anomaly Since</th>
+                                <th>FPS Score</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reading, equipment in active_anomalies %}
+                                {% set stats = anomaly_stats.get(equipment.id, {}) %}
+                                {% set mu = stats.get('mu', reading.metric_value or 0) %}
+                                {% set sigma = stats.get('sigma', 0) %}
+                                {% set normal_low = mu - (2.5 * sigma) %}
+                                {% set normal_high = mu + (2.5 * sigma) %}
+                                {% set fps_meta = get_fps_label(equipment.fps_score or 0) %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ equipment.equipment_name }}</div>
+                                        <div class="small text-muted">{{ equipment.equipment_type | replace('_', ' ') | title }}</div>
+                                    </td>
+                                    <td>Zone {{ equipment.zone or '-' }}, Floor {{ equipment.floor }}</td>
+                                    <td>{{ reading.metric_name | replace('_', ' ') | title }}</td>
+                                    <td><span class="text-danger fw-semibold">{{ '%.2f'|format(reading.metric_value or 0) }}</span></td>
+                                    <td class="small text-muted">{{ '%.2f'|format(normal_low) }} - {{ '%.2f'|format(normal_high) }}</td>
+                                    <td>
+                                        <span class="z-score-badge {% if (reading.z_score or 0) | abs > 4.0 %}severe{% else %}moderate{% endif %}">
+                                            {{ '%.2f'|format(reading.z_score or 0) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ reading.timestamp | relative_time }}</td>
+                                    <td><span class="badge bg-light border text-dark">{{ ((equipment.fps_score or 0) * 100) | round(0) }}%</span></td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-warning btn-create-work-order"
+                                            data-equipment-id="{{ equipment.id }}"
+                                            data-equipment-name="{{ equipment.equipment_name }}"
+                                        >Dispatch Crew</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">&#128203; Open Work Orders ({{ open_work_orders_total }})</div>
+        </div>
+        <div class="card-body p-0">
+            {% if not open_work_orders %}
+                <div class="p-4 text-success fw-semibold">&#9989; No open work orders.</div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table mb-0" id="workOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>WO #</th>
+                                <th>Equipment</th>
+                                <th>Priority</th>
+                                <th>Description</th>
+                                <th>Assigned To</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wo, equipment, assigned_user in open_work_orders %}
+                                <tr id="wo-row-{{ wo.id }}" class="wo-status-{{ wo.status }}">
+                                    <td>#{{ wo.id }}</td>
+                                    <td>{{ equipment.equipment_name }}</td>
+                                    <td><span class="priority-badge {{ wo.priority }} badge">{{ wo.priority | title }}</span></td>
+                                    <td>{{ wo.description | default('', true) | truncate(60) }}</td>
+                                    <td>
+                                        {% if assigned_user %}
+                                            {{ assigned_user.full_name }}
+                                        {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ wo.created_at | relative_time }}</td>
+                                    <td>
+                                        <span class="badge {% if wo.status == 'open' %}bg-primary{% elif wo.status == 'in_progress' %}bg-info{% elif wo.status == 'completed' %}bg-success{% else %}bg-secondary{% endif %} wo-status-badge">
+                                            {{ wo.status | replace('_', ' ') | title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if wo.status == 'open' %}
+                                            <div class="d-flex gap-1 align-items-center">
+                                                <select class="form-select form-select-sm select-assign-wo" data-wo-id="{{ wo.id }}" style="max-width: 170px;">
+                                                    <option value="">Assign</option>
+                                                    {% for manager in facility_managers %}
+                                                        <option value="{{ manager.id }}" {% if wo.assigned_to_user_id == manager.id %}selected{% endif %}>{{ manager.full_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="button" class="btn btn-sm btn-success btn-complete-wo" data-wo-id="{{ wo.id }}">Mark Complete</button>
+                                            </div>
+                                        {% elif wo.status == 'in_progress' %}
+                                            <div class="d-flex gap-1 align-items-center">
+                                                <input type="number" step="0.01" class="form-control form-control-sm input-actual-cost" placeholder="Actual INR" style="max-width: 120px;">
+                                                <button type="button" class="btn btn-sm btn-success btn-complete-wo" data-wo-id="{{ wo.id }}">Mark Complete</button>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                    <a href="{{ url_for('facility.index', wo_page=(wo_page - 1)) }}" class="btn btn-sm btn-outline-secondary {% if wo_page <= 1 %}disabled{% endif %}">Previous</a>
+                    <span class="small text-muted">Page {{ wo_page }} of {{ wo_pages }}</span>
+                    <a href="{{ url_for('facility.index', wo_page=(wo_page + 1)) }}" class="btn btn-sm btn-outline-secondary {% if wo_page >= wo_pages %}disabled{% endif %}">Next</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createWorkOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="workOrderModalTitle">Create Work Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="workOrderForm" method="POST" action="{{ url_for('facility.create_work_order') }}">
+                <div class="modal-body">
+                    {{ work_order_form.hidden_tag() }}
+                    <input type="hidden" id="modal-equipment-id" name="equipment_id" value="">
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ work_order_form.title.id }}">{{ work_order_form.title.label.text }}</label>
+                        {{ work_order_form.title(class='form-control', id=work_order_form.title.id) }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ work_order_form.description.id }}">{{ work_order_form.description.label.text }}</label>
+                        {{ work_order_form.description(class='form-control', id=work_order_form.description.id) }}
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ work_order_form.priority.id }}">{{ work_order_form.priority.label.text }}</label>
+                            {{ work_order_form.priority(class='form-select', id=work_order_form.priority.id) }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ work_order_form.assigned_to_user_id.id }}">{{ work_order_form.assigned_to_user_id.label.text }}</label>
+                            {{ work_order_form.assigned_to_user_id(class='form-select', id=work_order_form.assigned_to_user_id.id) }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ work_order_form.estimated_cost_inr.id }}">{{ work_order_form.estimated_cost_inr.label.text }}</label>
+                            {{ work_order_form.estimated_cost_inr(class='form-control', id=work_order_form.estimated_cost_inr.id) }}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Work Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/facility.js') }}" defer></script>
+{% endif %}
+{% endblock %}

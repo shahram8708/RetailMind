@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Onboarding{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    .navbar,
+    .site-footer {
+        display: none !important;
+    }
+
+    .main-content.authenticated {
+        padding-top: 0 !important;
+        min-height: 100vh;
+    }
+
+    .alerts-container {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-bar-onboarding" style="width: {{ ((current_step / 5) * 100) | round(0, 'floor') }}%;"></div>
+<div class="onboarding-layout">
+    <aside class="onboarding-sidebar">
+        <div>
+            <div class="fw-bold fs-4 text-primary">RetailMind</div>
+            <div class="text-muted small text-uppercase mt-2">Mall Setup Wizard</div>
+        </div>
+
+        {% set steps = [
+            {'number': 1, 'title': 'Property Details', 'description': 'Basic info about your mall'},
+            {'number': 2, 'title': 'Data Connections', 'description': 'Link your existing systems'},
+            {'number': 3, 'title': 'Tenant Setup', 'description': 'Add your tenant stores'},
+            {'number': 4, 'title': 'Agent Configuration', 'description': 'Configure AI thresholds'},
+            {'number': 5, 'title': 'Preferences', 'description': 'Notifications and alerts'}
+        ] %}
+
+        <div class="step-indicator mt-4">
+            {% for step in steps %}
+                <div class="step-item">
+                    {% set state = 'future' %}
+                    {% if step.number < current_step %}
+                        {% set state = 'complete' %}
+                    {% elif step.number == current_step %}
+                        {% set state = 'current' %}
+                    {% endif %}
+
+                    <div class="step-circle {{ state }}">{{ step.number }}</div>
+                    <div>
+                        <div class="fw-semibold">{{ step.title }}</div>
+                        <div class="text-muted small">{{ step.description }}</div>
+                    </div>
+
+                    {% if not loop.last %}
+                        <div class="step-connector {% if step.number < current_step %}complete{% endif %}"></div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-auto small text-muted pt-3">
+            Need help? Contact support@retailmind.ai
+        </div>
+    </aside>
+
+    <section class="onboarding-main">
+        <div class="mb-4">
+            <div class="text-primary small fw-semibold">Step {{ current_step }} of 5</div>
+            <h2 class="mb-1">{{ step_title }}</h2>
+            <p class="text-muted mb-0">{{ step_description }}</p>
+        </div>
+
+        <form method="POST" id="onboarding-form" novalidate>
+            {{ form.hidden_tag() }}
+            {% block step_content %}{% endblock %}
+
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                {% if previous_step_url %}
+                    <a href="{{ previous_step_url }}" class="btn btn-outline-secondary">&larr; Back</a>
+                {% else %}
+                    <span></span>
+                {% endif %}
+                {{ form.submit(class='btn btn-primary px-4') }}
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

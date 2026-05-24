@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Configure SKU{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-page" style="max-width: 900px;">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('inventory.index') }}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('inventory.detail', sku_id=item.sku_id) }}">{{ item.sku_id }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Configure</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body p-4">
+            <h4 class="mb-1">Configure SKU Alert Settings</h4>
+            <div class="text-muted mb-3">{{ item.product_name }} ({{ item.sku_id }})</div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="small text-muted">Current Reorder Threshold</div>
+                    <div class="fw-semibold">{{ item.reorder_threshold }} units</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted">Current Supplier Lead Time</div>
+                    <div class="fw-semibold">{{ item.supplier_lead_time_hours }} hours</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted">Supplier Name</div>
+                    <div class="fw-semibold">{{ item.supplier_name or 'N/A' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted">Supplier Email</div>
+                    <div class="fw-semibold">{{ item.supplier_email or 'N/A' }}</div>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('inventory.configure', sku_id=item.sku_id) }}">
+                {{ form.hidden_tag() }}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.reorder_threshold.id }}">{{ form.reorder_threshold.label.text }}</label>
+                        {{ form.reorder_threshold(class='form-control') }}
+                        {% for error in form.reorder_threshold.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.supplier_lead_time_hours.id }}">{{ form.supplier_lead_time_hours.label.text }}</label>
+                        {{ form.supplier_lead_time_hours(class='form-control') }}
+                        {% for error in form.supplier_lead_time_hours.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.supplier_name.id }}">{{ form.supplier_name.label.text }}</label>
+                        {{ form.supplier_name(class='form-control') }}
+                        {% for error in form.supplier_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.supplier_email.id }}">{{ form.supplier_email.label.text }}</label>
+                        {{ form.supplier_email(class='form-control') }}
+                        {% for error in form.supplier_email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.sku_criticality.id }}">{{ form.sku_criticality.label.text }}</label>
+                        {{ form.sku_criticality(class='form-select') }}
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    {{ form.submit(class='btn btn-primary') }}
+                    <a href="{{ url_for('inventory.detail', sku_id=item.sku_id) }}" class="btn btn-outline-secondary">&larr; Back to SKU Detail</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

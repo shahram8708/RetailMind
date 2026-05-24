@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}All Platform Tenants{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">All Platform Tenants</h2>
+                <div class="text-muted small">Cross property tenant inventory and status overview</div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ pagination.total }}</div>
+                    <div class="sa-kpi-label">Total Tenants</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-label">Top Categories</div>
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        {% for category, count in top_categories %}
+                        <span class="badge text-bg-secondary">{{ category }}: {{ count }}</span>
+                        {% else %}
+                        <span class="text-muted small">No category data</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('superadmin.tenants') }}" class="row g-2 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Search</label>
+                        <input class="form-control form-control-sm" type="text" name="search" value="{{ filters.search }}" placeholder="Tenant name">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Category</label>
+                        <select class="form-select form-select-sm" name="category">
+                            <option value="all" {% if filters.category == 'all' %}selected{% endif %}>All</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Property</label>
+                        <select class="form-select form-select-sm" name="property_id">
+                            <option value="0" {% if filters.property_id == 0 %}selected{% endif %}>All</option>
+                            {% for property in properties %}
+                            <option value="{{ property.id }}" {% if filters.property_id == property.id %}selected{% endif %}>{{ property.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label small">Active</label>
+                        <select class="form-select form-select-sm" name="active">
+                            <option value="all" {% if filters.active == 'all' %}selected{% endif %}>All</option>
+                            <option value="active" {% if filters.active == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if filters.active == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-1 col-md-6 d-flex gap-2">
+                        <button class="btn btn-sa-primary btn-sm w-100" type="submit">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tenant Name</th>
+                                <th>Category</th>
+                                <th>Property</th>
+                                <th>Zone</th>
+                                <th>Floor</th>
+                                <th>Unit Number</th>
+                                <th>Manager Email</th>
+                                <th>Active Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tenant, property in pagination.items %}
+                            <tr id="tenant-row-{{ tenant.id }}" {% if not tenant.is_active %}class="sa-row-muted"{% endif %}>
+                                <td>{{ tenant.id }}</td>
+                                <td>{{ tenant.name }}</td>
+                                <td><span class="badge text-bg-secondary">{{ tenant.category or '-' }}</span></td>
+                                <td>{{ property.name }}</td>
+                                <td><span class="badge text-bg-light border">{{ tenant.zone or '-' }}</span></td>
+                                <td>{{ tenant.floor }}</td>
+                                <td>{{ tenant.unit_number or '-' }}</td>
+                                <td>{{ tenant.contact_email or '-' }}</td>
+                                <td>
+                                    <span id="tenant-active-badge-{{ tenant.id }}" class="badge {% if tenant.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                        {{ 'Active' if tenant.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>{{ tenant.created_at.strftime('%d %b %Y') if tenant.created_at else '-' }}</td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('inventory.index', tenant_id=tenant.id) }}">View Inventory</a>
+                                        <button class="btn btn-sm btn-toggle-tenant {% if tenant.is_active %}btn-danger{% else %}btn-success{% endif %}" type="button" data-tenant-id="{{ tenant.id }}">
+                                            {% if tenant.is_active %}Deactivate{% else %}Reactivate{% endif %}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="11" class="text-muted">No tenants found for current filters.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ render_pagination(pagination) }}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endblock %}

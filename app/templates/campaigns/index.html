@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}Campaign Intelligence{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/campaigns.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="campaigns-page">
+    <div class="campaign-header">
+        <div>
+            <h2 class="mb-0">&#128227; Campaign Activation Engine</h2>
+        </div>
+        <button id="generateOpportunitiesBtn" class="btn btn-primary">Generate Opportunities Now</button>
+    </div>
+
+    <div class="campaign-stat-grid">
+        <div class="campaign-stat-card teal">
+            <div class="label">Active Campaigns</div>
+            <div class="value" id="activeCampaignCount">{{ total_active }}</div>
+        </div>
+        <div class="campaign-stat-card">
+            <div class="label">Weekly Impressions</div>
+            <div class="value">{{ total_impressions_this_week | format_inr }}</div>
+        </div>
+        <div class="campaign-stat-card">
+            <div class="label">Revenue Attributed</div>
+            <div class="value">&#8377;{{ total_revenue_attributed | int | format_inr }}</div>
+        </div>
+        <div class="campaign-stat-card">
+            <div class="label">Avg Conversion Rate</div>
+            <div class="value">{{ '%.1f' | format(avg_conversion_rate) }}%</div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">&#128994; Active Campaigns ({{ active_campaigns | length }})</div>
+        <div class="card-body">
+            {% if not active_campaigns %}
+                <div class="empty-soft">No campaigns currently active. Activate an opportunity below.</div>
+            {% else %}
+                <div class="active-campaigns-scroll">
+                    {% for campaign, tenant in active_campaigns %}
+                        {% set conv = ((campaign.conversions / campaign.impressions) * 100) if campaign.impressions > 0 else 0 %}
+                        <div class="active-campaign-card">
+                            <div class="fw-semibold mb-1">{{ campaign.campaign_name }}</div>
+                            <div class="small text-muted mb-2">
+                                {{ tenant.name if tenant else 'Unknown Tenant' }}
+                                <span class="context-pill zone">Zone {{ campaign.target_zone or (tenant.zone if tenant else '-') }}</span>
+                                <span class="context-pill channel">{{ campaign.channel }}</span>
+                            </div>
+                            <div class="small text-muted mb-2">Activated {{ campaign.activated_at | relative_time }}</div>
+
+                            <div class="metric-mini-grid mb-2">
+                                <div>
+                                    <div class="metric-mini-value">{{ campaign.impressions | format_inr }}</div>
+                                    <div class="metric-mini-label">Impressions</div>
+                                </div>
+                                <div>
+                                    <div class="metric-mini-value">{{ campaign.clicks | format_inr }}</div>
+                                    <div class="metric-mini-label">Clicks</div>
+                                </div>
+                                <div>
+                                    <div class="metric-mini-value">{{ '%.1f' | format(conv) }}%</div>
+                                    <div class="metric-mini-label">Conv%</div>
+                                </div>
+                            </div>
+
+                            <div class="small fw-semibold text-info mb-3">Revenue: &#8377;{{ campaign.revenue_attributed | int | format_inr }}</div>
+
+                            <div class="d-flex gap-2">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary btn-toggle-campaign-status"
+                                    data-campaign-id="{{ campaign.id }}"
+                                    data-target-status="paused"
+                                >Pause</button>
+                                <a href="{{ url_for('campaigns.detail', campaign_id=campaign.id) }}" class="btn btn-sm btn-outline-primary">View Details -&gt;</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">&#128161; Campaign Opportunities - Ranked by Score ({{ opportunity_campaigns | length }})</div>
+        <div class="card-body">
+            {% if not opportunity_campaigns %}
+                <div class="empty-blue">
+                    No opportunities identified yet. Opportunities appear here when the Campaign Agent detects high foot traffic,
+                    weather alignment, or event proximity. Click Generate Opportunities Now to run analysis.
+                </div>
+            {% else %}
+                {% for campaign, tenant in opportunity_campaigns %}
+                    {% set cos = campaign.opportunity_score or 0 %}
+                    {% set weather_txt = (campaign.weather_context or '') | lower %}
+                    {% if 'rain' in weather_txt %}
+                        {% set weather_icon = '&#127783;&#65039;' %}
+                    {% elif 'cloud' in weather_txt %}
+                        {% set weather_icon = '&#9729;&#65039;' %}
+                    {% else %}
+                        {% set weather_icon = '&#9728;&#65039;' %}
+                    {% endif %}
+
+                    <div class="opportunity-card" data-campaign-id="{{ campaign.id }}">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <span class="cos-score-badge {% if cos > 0.80 %}high{% elif cos >= 0.70 %}medium{% else %}low{% endif %}">
+                                COS {{ (cos * 100) | int }}%
+                            </span>
+                            <h5 class="mb-0 campaign-title">{{ campaign.campaign_name }}</h5>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="context-pill zone">{{ tenant.name if tenant else 'Unknown Tenant' }}</span>
+                            <span class="context-pill zone">Zone {{ campaign.target_zone or (tenant.zone if tenant else '-') }}</span>
+                            <span class="context-pill channel">{{ campaign.channel }}</span>
+                            <span class="context-pill weather">{{ weather_icon | safe }} {{ campaign.weather_context or 'Weather neutral' }}</span>
+                            {% if campaign.event_context %}
+                                <span class="context-pill event">&#127881; {{ campaign.event_context }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="campaign-copy-preview mb-2">"{{ campaign.campaign_copy }}"</div>
+                        <div class="small text-muted mb-3">&#128101; {{ campaign.target_audience_description or 'General mall visitors' }}</div>
+
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <button type="button" class="btn btn-sm btn-primary btn-activate-campaign" data-campaign-id="{{ campaign.id }}">&#10003; Activate Campaign</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-dismiss-campaign" data-campaign-id="{{ campaign.id }}">&#10007; Dismiss</button>
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-primary btn-edit-campaign"
+                                data-campaign-id="{{ campaign.id }}"
+                                data-campaign-name="{{ campaign.campaign_name }}"
+                                data-campaign-copy="{{ (campaign.campaign_copy or '') | replace('\n', ' ') }}"
+                                data-target-audience="{{ (campaign.target_audience_description or '') | replace('\n', ' ') }}"
+                                data-channel="{{ campaign.channel }}"
+                            >&#9998; Edit</button>
+                            <a href="{{ url_for('campaigns.detail', campaign_id=campaign.id) }}" class="btn btn-sm btn-outline-info">View Details -&gt;</a>
+                        </div>
+
+                        <div class="small text-muted">Identified {{ campaign.created_at | relative_time }} by RetailMind Agent</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white fw-semibold">&#128202; Campaign History</div>
+        <div class="card-body p-0">
+            {% if campaign_history.items %}
+                <div class="table-responsive">
+                    <table class="table mb-0" id="campaignHistoryTable">
+                        <thead>
+                            <tr>
+                                <th data-sort="campaign_name">Campaign Name</th>
+                                <th data-sort="tenant">Tenant</th>
+                                <th data-sort="zone">Zone</th>
+                                <th data-sort="activated">Activated</th>
+                                <th data-sort="duration">Duration</th>
+                                <th data-sort="reach">Reach</th>
+                                <th data-sort="clicks">Clicks</th>
+                                <th data-sort="conv">Conv%</th>
+                                <th data-sort="revenue">Revenue &#8377;</th>
+                                <th data-sort="status">Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for campaign in campaign_history.items %}
+                                {% set tenant_name = campaign.tenant.name if campaign.tenant else 'Unknown Tenant' %}
+                                {% set conv = ((campaign.conversions / campaign.impressions) * 100) if campaign.impressions > 0 else 0 %}
+                                {% set duration = '-' %}
+                                {% if campaign.activated_at %}
+                                    {% if campaign.expires_at %}
+                                        {% set duration = ((campaign.expires_at - campaign.activated_at).total_seconds() / 3600) | round(1) ~ 'h' %}
+                                    {% else %}
+                                        {% set duration = (campaign.activated_at | relative_time) %}
+                                    {% endif %}
+                                {% endif %}
+
+                                <tr>
+                                    <td data-key="campaign_name" data-sort-value="{{ campaign.campaign_name }}">{{ campaign.campaign_name }}</td>
+                                    <td data-key="tenant" data-sort-value="{{ tenant_name }}">{{ tenant_name }}</td>
+                                    <td data-key="zone" data-sort-value="{{ campaign.target_zone or '' }}">{{ campaign.target_zone or '-' }}</td>
+                                    <td data-key="activated" data-sort-value="{{ campaign.activated_at.isoformat() if campaign.activated_at else '' }}">{{ campaign.activated_at | relative_time }}</td>
+                                    <td data-key="duration" data-sort-value="{{ duration }}">{{ duration }}</td>
+                                    <td data-key="reach" data-sort-value="{{ campaign.impressions }}">{{ campaign.impressions | format_inr }}</td>
+                                    <td data-key="clicks" data-sort-value="{{ campaign.clicks }}">{{ campaign.clicks | format_inr }}</td>
+                                    <td data-key="conv" data-sort-value="{{ '%.2f' | format(conv) }}">{{ '%.1f' | format(conv) }}%</td>
+                                    <td data-key="revenue" data-sort-value="{{ campaign.revenue_attributed }}">{{ campaign.revenue_attributed | int | format_inr }}</td>
+                                    <td data-key="status" data-sort-value="{{ campaign.status }}"><span class="badge status-badge {{ campaign.status }}">{{ campaign.status }}</span></td>
+                                    <td><a href="{{ url_for('campaigns.detail', campaign_id=campaign.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {{ render_pagination(campaign_history) }}
+            {% else %}
+                <div class="p-3 text-muted">No past campaigns yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCampaignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCampaignForm">
+                <div class="modal-body">
+                    {{ edit_form.hidden_tag() }}
+                    <input type="hidden" name="campaign_id" value="">
+
+                    <div class="mb-3">
+                        <label class="form-label">Campaign Name</label>
+                        {{ edit_form.campaign_name(class='form-control') }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Campaign Copy</label>
+                        {{ edit_form.campaign_copy(class='form-control', rows='5') }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Target Audience</label>
+                        {{ edit_form.target_audience_description(class='form-control', rows='3') }}
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Channel</label>
+                            {{ edit_form.channel(class='form-select') }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Campaign Expiry</label>
+                            {{ edit_form.expires_at(class='form-control') }}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/campaigns.js') }}" defer></script>
+{% endif %}
+{% endblock %}

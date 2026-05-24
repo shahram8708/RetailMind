@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-container settings-page">
+    <div class="settings-layout">
+        <aside class="settings-sidebar card p-3">
+            <div class="small text-uppercase text-muted mb-2">Settings</div>
+            <nav class="nav flex-column gap-1">
+                <a class="settings-link {% if request.endpoint == 'settings.profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">👤 My Account</a>
+                {% if current_user.role in ['mall_admin', 'superadmin'] %}
+                <a class="settings-link {% if request.endpoint == 'settings.team' %}active{% endif %}" href="{{ url_for('settings.team') }}">👥 Team Members</a>
+                <a class="settings-link {% if request.endpoint == 'settings.billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">💳 Billing & Subscription</a>
+                {% endif %}
+                <a class="settings-link {% if request.endpoint == 'settings.integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">🔌 Data Integrations</a>
+                <hr>
+                <a class="settings-link" href="{{ url_for('agent.settings') }}">🤖 Agent Configuration</a>
+                <a class="settings-link" href="{{ url_for('agent.logs') }}">📋 Agent Logs</a>
+            </nav>
+        </aside>
+
+        <section class="settings-main">
+            <div class="card p-4 mb-3">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="settings-avatar">{{ current_user.get_initials() }}</div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1">{{ current_user.full_name }}</h4>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted">{{ current_user.email }}</span>
+                            <span class="badge text-bg-light border">{{ current_user.role|replace('_', ' ')|title }}</span>
+                        </div>
+                        <div class="text-muted small mt-1">📍 {{ property.name if property else 'N/A' }}, {{ property.city if property else 'N/A' }}</div>
+                        <div class="text-muted small mt-1">
+                            Member since {{ current_user.created_at | relative_time }}
+                            · Last login {{ current_user.last_login | relative_time if current_user.last_login else 'First login' }}
+                        </div>
+                    </div>
+                    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('settings.profile') }}">Edit Profile →</a>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="card p-3 h-100">
+                        <div class="text-muted small">Team Size</div>
+                        <div class="fs-3 fw-bold">{{ team_count }}</div>
+                        <div class="small">members</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 h-100">
+                        <div class="text-muted small">Subscription</div>
+                        <div class="fs-5 fw-bold">{{ subscription.plan_name.title() if subscription else 'No Plan' }}</div>
+                        <span class="badge {% if subscription and subscription.status == 'active' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ subscription.status.title() if subscription else 'Inactive' }}</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 h-100">
+                        <div class="text-muted small">Integrations</div>
+                        <div class="fs-3 fw-bold">{{ connected_integrations_count }}</div>
+                        <div class="small">connected</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <a class="card p-3 quick-link-card" href="{{ url_for('agent.settings') }}">
+                        <div class="fw-semibold">🎛️ Configure Agent Thresholds</div>
+                        <div class="small text-muted">Tune mission settings, thresholds, and automation.</div>
+                        <div class="small fw-semibold text-primary mt-1">→</div>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a class="card p-3 quick-link-card" href="{{ url_for('settings.team') if current_user.role in ['mall_admin', 'superadmin'] else '#' }}">
+                        <div class="fw-semibold">👥 Manage Team</div>
+                        <div class="small text-muted">Invite users, update roles, and manage access.</div>
+                        <div class="small fw-semibold text-primary mt-1">→</div>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a class="card p-3 quick-link-card" href="{{ url_for('settings.billing') if current_user.role in ['mall_admin', 'superadmin'] else '#' }}">
+                        <div class="fw-semibold">💳 Billing & Payments</div>
+                        <div class="small text-muted">View plan details, payment history, and upgrades.</div>
+                        <div class="small fw-semibold text-primary mt-1">→</div>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a class="card p-3 quick-link-card" href="{{ url_for('agent.logs') }}">
+                        <div class="fw-semibold">📋 View Audit Log</div>
+                        <div class="small text-muted">Review every AI action and approval record.</div>
+                        <div class="small fw-semibold text-primary mt-1">→</div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+.settings-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+}
+.settings-sidebar {
+    height: fit-content;
+    position: sticky;
+    top: 78px;
+}
+.settings-link {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: #334155;
+    font-weight: 500;
+}
+.settings-link:hover {
+    background: #eef4ff;
+    color: #1a6fe8;
+}
+.settings-link.active {
+    background: #e7efff;
+    color: #1a6fe8;
+}
+.settings-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #0a1628;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+.quick-link-card {
+    text-decoration: none;
+    color: inherit;
+}
+.quick-link-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+@media (max-width: 992px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+    .settings-sidebar {
+        position: static;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endif %}
+{% endblock %}

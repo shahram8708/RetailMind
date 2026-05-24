@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}All Properties{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">All Properties</h2>
+                <div class="text-muted small">Platform wide property directory and subscription controls</div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('superadmin.properties') }}" class="row g-2 align-items-end">
+                    <div class="col-lg-4 col-md-6">
+                        <label class="form-label small">Search</label>
+                        <input class="form-control form-control-sm" type="text" name="search" value="{{ filters.search }}" placeholder="Property name or city">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Tier</label>
+                        <select class="form-select form-select-sm" name="tier">
+                            <option value="all" {% if filters.tier == 'all' %}selected{% endif %}>All</option>
+                            <option value="starter" {% if filters.tier == 'starter' %}selected{% endif %}>Starter</option>
+                            <option value="professional" {% if filters.tier == 'professional' %}selected{% endif %}>Professional</option>
+                            <option value="enterprise" {% if filters.tier == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small">Status</label>
+                        <select class="form-select form-select-sm" name="status">
+                            <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All</option>
+                            <option value="onboarded" {% if filters.status == 'onboarded' %}selected{% endif %}>Onboarded</option>
+                            <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending Setup</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6 d-flex gap-2">
+                        <button class="btn btn-sa-primary btn-sm w-100" type="submit">Apply</button>
+                        <a class="btn btn-outline-secondary btn-sm w-100" href="{{ url_for('superadmin.properties') }}">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Property Name</th>
+                                <th>City</th>
+                                <th>Owner</th>
+                                <th>Tier</th>
+                                <th>Tenants</th>
+                                <th>Users</th>
+                                <th>Onboarding</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in property_rows %}
+                            {% set property = row.property %}
+                            <tr id="property-row-{{ property.id }}">
+                                <td>{{ property.id }}</td>
+                                <td>{{ property.name }}</td>
+                                <td>{{ property.city or '-' }}</td>
+                                <td>{{ row.owner_name }}</td>
+                                <td>
+                                    <span id="tier-badge-{{ property.id }}" class="badge {% if property.subscription_tier == 'enterprise' %}badge-tier-enterprise{% elif property.subscription_tier == 'professional' %}badge-tier-professional{% else %}badge-tier-starter{% endif %}">
+                                        {{ property.subscription_tier|title }}
+                                    </span>
+                                </td>
+                                <td>{{ row.tenant_count }}</td>
+                                <td>{{ row.user_count }}</td>
+                                <td>
+                                    <span class="badge {% if property.onboarding_complete %}text-bg-success{% else %}text-bg-warning{% endif %}">
+                                        {% if property.onboarding_complete %}Complete{% else %}Pending Setup{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ property.created_at.strftime('%d %b %Y') if property.created_at else '-' }}</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('superadmin.property_detail', property_id=property.id) }}">View Detail -></a>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sa-primary btn-sm btn-change-tier"
+                                            data-property-id="{{ property.id }}"
+                                            data-current-tier="{{ property.subscription_tier }}"
+                                        >Change Tier</button>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sa-danger btn-sm btn-suspend-property"
+                                            data-property-id="{{ property.id }}"
+                                        >Suspend</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="10" class="text-muted">No properties found for current filters.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ render_pagination(pagination) }}
+    </section>
+</div>
+
+<div class="modal fade" id="changeTierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Property Tier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changeTierForm">
+                <div class="modal-body">
+                    <input type="hidden" id="changeTierPropertyId" value="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-2 small text-muted">Current tier: <span id="currentTierLabel"></span></div>
+                    <label class="form-label">Select New Tier</label>
+                    <select class="form-select" id="tierSelect" required>
+                        <option value="starter">Starter</option>
+                        <option value="professional">Professional</option>
+                        <option value="enterprise">Enterprise</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sa-primary">Change Tier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

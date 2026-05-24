@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Email{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+    body { padding-top: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card text-center">
+        {% if success %}
+            <div class="display-5 mb-3 text-success">&#10003;</div>
+            <h1 class="auth-title">Email Verified!</h1>
+            <p class="auth-subtitle">Your account is verified. You can now sign in.</p>
+            <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Go to Sign In -></a>
+        {% else %}
+            <div class="display-5 mb-3 text-danger">&#10007;</div>
+            <h1 class="auth-title">Verification Failed</h1>
+            <p class="auth-subtitle">{{ error_message or 'This verification link is invalid or expired.' }}</p>
+            <a class="btn btn-outline-primary" href="{{ url_for('auth.resend_verification') }}">Resend Verification Email -></a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

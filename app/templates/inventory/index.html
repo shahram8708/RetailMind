@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}Inventory Watch{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-page">
+    <div class="inventory-header">
+        <div>
+            <h2>&#128230; Inventory Watch Engine</h2>
+            <div class="subtitle">SRS Algorithm monitoring {{ total_skus }} SKUs</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/agent/settings" class="btn btn-outline-primary">Configure Thresholds -&gt;</a>
+            <button type="button" id="runInventoryNowBtn" class="btn btn-primary">Run Analysis Now</button>
+        </div>
+    </div>
+
+    <div class="inventory-stat-grid">
+        <div class="inventory-stat-card">
+            <div class="icon">SKU</div>
+            <div>
+                <div class="value count-up-number" data-target="{{ total_skus }}">0</div>
+                <div class="label">Total SKUs Monitored</div>
+            </div>
+        </div>
+        <div class="inventory-stat-card">
+            <div class="icon">RISK</div>
+            <div>
+                <div class="value count-up-number" data-target="{{ above_threshold_today }}">0</div>
+                <div class="label">At Risk SKUs (Above Threshold)
+                    {% if above_threshold_today > 0 %}
+                        <span class="badge bg-danger">{{ above_threshold_today }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="inventory-stat-card">
+            <div class="icon">OK</div>
+            <div>
+                <div class="value count-up-number" data-target="{{ stockouts_prevented }}">0</div>
+                <div class="label">Stockouts Prevented</div>
+            </div>
+        </div>
+        <div class="inventory-stat-card">
+            <div class="icon">AUTO</div>
+            <div>
+                <div class="value count-up-number" data-target="{{ auto_restocked_today }}">0</div>
+                <div class="label">Auto Restocked Today</div>
+            </div>
+        </div>
+    </div>
+
+    {% if top_critical %}
+        <h5 class="text-danger mb-3">&#9888;&#65039; Critical Attention Required</h5>
+        <div class="critical-alert-grid">
+            {% for item, tenant in top_critical %}
+                {% set details = critical_srs_map.get(item.sku_id, {}) %}
+                {% set pending = pending_action_map.get(item.sku_id) %}
+                {% set stock_ratio = ((item.stock_level / (item.reorder_threshold or 1)) * 100) | int %}
+                {% if stock_ratio > 100 %}{% set stock_ratio = 100 %}{% endif %}
+                {% if stock_ratio < 0 %}{% set stock_ratio = 0 %}{% endif %}
+
+                <div class="critical-alert-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-danger">CRITICAL</span>
+                        <div class="text-end">
+                            <div class="srs-score-large">{{ (item.srs_score * 100) | int }}%</div>
+                            <div class="small text-muted">Score</div>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-1">{{ item.product_name }}</h5>
+                    <div class="small text-muted mb-1">{{ item.brand }} | {{ item.sku_id }}</div>
+                    <div class="small mb-2">{{ tenant.name }} <span class="badge bg-light text-dark border">Zone {{ tenant.zone }}</span></div>
+
+                    <div class="small mb-1">{{ item.stock_level }} units remaining</div>
+                    <div class="stock-bar-container mb-2" style="width: 100%; height: 8px;">
+                        <div class="stock-bar-fill critical" style="width: {{ stock_ratio }}%;"></div>
+                    </div>
+
+                    <div class="small text-muted mb-3">
+                        Time to Stockout:
+                        {% if details.get('tts_hours') is not none %}
+                            ~{{ details.get('tts_hours') | round(1) }} hours
+                        {% else %}
+                            Imminent
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        {% if pending %}
+                            <button type="button" class="btn btn-success btn-sm btn-approve-list" data-action-id="{{ pending.id }}">&#10003; Approve Restock</button>
+                        {% else %}
+                            <span class="badge bg-success-subtle text-success align-self-center">No Pending Alert</span>
+                        {% endif %}
+                        <a href="{{ url_for('inventory.detail', sku_id=item.sku_id) }}" class="btn btn-outline-primary btn-sm">View Details -&gt;</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="filter-card">
+        <form method="GET" action="{{ url_for('inventory.index') }}">
+            <div class="filter-grid">
+                <div>
+                    <label class="form-label small text-muted">Tenant</label>
+                    <select class="form-select form-select-sm" name="tenant_id">
+                        <option value="">All Tenants</option>
+                        {% for tenant in tenants_list %}
+                            <option value="{{ tenant.id }}" {% if filters.tenant_id == tenant.id %}selected{% endif %}>{{ tenant.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small text-muted">Category</label>
+                    <select class="form-select form-select-sm" name="category">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small text-muted">Risk Level</label>
+                    <select class="form-select form-select-sm" name="risk_level">
+                        <option value="all" {% if filters.risk_level == 'all' %}selected{% endif %}>All</option>
+                        <option value="critical" {% if filters.risk_level == 'critical' %}selected{% endif %}>Critical (&gt;0.85)</option>
+                        <option value="high" {% if filters.risk_level == 'high' %}selected{% endif %}>High (0.70-0.85)</option>
+                        <option value="medium" {% if filters.risk_level == 'medium' %}selected{% endif %}>Medium (0.50-0.70)</option>
+                        <option value="low" {% if filters.risk_level == 'low' %}selected{% endif %}>Low (&lt;0.50)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small text-muted">Sort</label>
+                    <select class="form-select form-select-sm" name="sort_by">
+                        <option value="srs_score_desc" {% if filters.sort_by == 'srs_score_desc' %}selected{% endif %}>SRS Score &#8595;</option>
+                        <option value="srs_score_asc" {% if filters.sort_by == 'srs_score_asc' %}selected{% endif %}>SRS Score &#8593;</option>
+                        <option value="name" {% if filters.sort_by == 'name' %}selected{% endif %}>Product Name A-Z</option>
+                        <option value="stock_level" {% if filters.sort_by == 'stock_level' %}selected{% endif %}>Stock Level &#8593;</option>
+                    </select>
+                </div>
+                <div class="search-wrap">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="search-input-wrap">
+                        <span class="search-icon">&#128269;</span>
+                        <input
+                            id="inventorySearchInput"
+                            type="text"
+                            class="form-control form-control-sm"
+                            name="search"
+                            value="{{ filters.search }}"
+                            placeholder="Search by product name, SKU, brand..."
+                        >
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Apply Filters</button>
+                    <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if pagination.items %}
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                    <h6 class="mb-0">SKU Risk Score Table</h6>
+                    <div class="small text-muted">Visible rows: <span id="visibleSkuCount">{{ pagination.items | length }}</span></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>SKU ID</th>
+                                <th>Product</th>
+                                <th>Tenant</th>
+                                <th>Category</th>
+                                <th>Stock Level</th>
+                                <th>SRS Score</th>
+                                <th>Last Restocked</th>
+                                <th>Supplier</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item, tenant in pagination.items %}
+                                {% set risk = get_srs_label(item.srs_score) %}
+                                {% set row_class = '' %}
+                                {% if item.srs_score >= 0.85 %}
+                                    {% set row_class = 'sku-row-critical' %}
+                                {% elif item.srs_score >= 0.70 %}
+                                    {% set row_class = 'sku-row-high' %}
+                                {% endif %}
+                                {% set pending = pending_action_map.get(item.sku_id) %}
+                                {% set stock_ratio = ((item.stock_level / (item.reorder_threshold or 1)) * 100) | int %}
+                                {% if stock_ratio > 100 %}{% set stock_ratio = 100 %}{% endif %}
+                                {% if stock_ratio < 0 %}{% set stock_ratio = 0 %}{% endif %}
+
+                                <tr class="sku-row {{ row_class }}" data-product="{{ item.product_name|lower }}" data-sku="{{ item.sku_id|lower }}" data-brand="{{ (item.brand or '')|lower }}">
+                                    <td><span class="monospace-small">{{ item.sku_id }}</span></td>
+                                    <td>
+                                        <div class="fw-semibold">{{ item.product_name }}</div>
+                                        <div class="small text-muted">{{ item.brand }}</div>
+                                    </td>
+                                    <td>
+                                        <div>{{ tenant.name }}</div>
+                                        <span class="badge bg-light text-dark border">Zone {{ tenant.zone }}</span>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ item.category }}</span></td>
+                                    <td>
+                                        <div class="small">{{ item.stock_level }} units</div>
+                                        <div class="stock-bar-container mt-1">
+                                            <div class="stock-bar-fill {% if item.stock_level < item.reorder_threshold %}critical{% else %}ok{% endif %}" style="width: {{ stock_ratio }}%;"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="srs-badge {{ risk[1] }}">{{ (item.srs_score * 100) | int }}%</span>
+                                        <div class="srs-bar-container">
+                                            <div
+                                                class="srs-bar-fill {% if item.srs_score >= 0.85 %}critical{% elif item.srs_score >= 0.70 %}high{% elif item.srs_score >= 0.50 %}medium{% else %}low{% endif %}"
+                                                style="width: {{ (item.srs_score * 100) | int }}%;"
+                                            ></div>
+                                        </div>
+                                    </td>
+                                    <td>{{ item.last_restocked | relative_time }}</td>
+                                    <td class="small">{{ item.supplier_name or 'N/A' }}</td>
+                                    <td class="action-cell">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <a href="{{ url_for('inventory.detail', sku_id=item.sku_id) }}" class="btn btn-sm btn-outline-primary">View -&gt;</a>
+                                            {% if pending %}
+                                                <button type="button" class="btn btn-sm btn-success btn-approve-list" data-action-id="{{ pending.id }}">Approve Restock</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-reject-list" data-action-id="{{ pending.id }}">Reject</button>
+                                            {% endif %}
+                                            <a href="{{ url_for('inventory.configure', sku_id=item.sku_id) }}" class="btn btn-sm btn-outline-secondary">Configure</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ render_pagination(pagination) }}
+    {% else %}
+        <div class="inventory-empty">
+            <h5 class="mb-2">No inventory data yet</h5>
+            <p class="mb-0">Add tenants and their SKU data to begin monitoring.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/inventory.js') }}" defer></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <span class="hero-badge">&#128640; AI-Powered Mall Operations Platform</span>
+        <h1 class="hero-title">Make Your Mall as Smart as the Best Digital Platform</h1>
+        <p class="hero-subtitle">
+            RetailMind deploys autonomous AI agents that transform your brick-and-mortar mall into an intelligent,
+            self-optimizing retail operating system.
+        </p>
+        <div class="hero-actions d-flex flex-wrap justify-content-center gap-3">
+            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Get Started Free -></a>
+            <a class="btn btn-outline-light btn-lg" href="#how-it-works">Watch How It Works</a>
+        </div>
+        <div class="stats-ticker mt-4">
+            <span>&#128737; 3 Stockouts Prevented Today</span>
+            <span>&#128227; 2 Campaigns Activated</span>
+            <span>&#128176; INR 1.2L Revenue Attributed</span>
+        </div>
+    </div>
+</section>
+
+<section class="problem-stats-bar">
+    <div class="container">
+        <div class="row g-3 text-center">
+            <div class="col-6 col-lg-3">
+                <h3>INR 2.5T</h3>
+                <p>Global Mall Revenue at Risk Annually</p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <h3>8-15%</h3>
+                <p>Revenue Lost to Inventory Stockouts</p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <h3>3-5x</h3>
+                <p>Higher Conversion with Real-Time Campaigns</p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <h3>20-30%</h3>
+                <p>Higher Repair Costs without Predictive Maintenance</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Four Autonomous AI Agents. One Unified Platform.</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-xl-3">
+                <article class="mission-card border-blue">
+                    <div class="mission-icon">&#128230;</div>
+                    <h5>Inventory Watch Engine</h5>
+                    <p>Predicts stockouts before they happen using real-time sales velocity and foot traffic data.</p>
+                    <a href="{{ url_for('public.features') }}">Explore Feature -></a>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <article class="mission-card border-teal">
+                    <div class="mission-icon">&#128227;</div>
+                    <h5>Campaign Activation Engine</h5>
+                    <p>Identifies revenue opportunities and launches targeted campaigns in seconds.</p>
+                    <a href="{{ url_for('public.features') }}">Explore Feature -></a>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <article class="mission-card border-orange">
+                    <div class="mission-icon">&#128295;</div>
+                    <h5>Facility Intelligence Engine</h5>
+                    <p>Detects equipment anomalies early and schedules maintenance before failures.</p>
+                    <a href="{{ url_for('public.features') }}">Explore Feature -></a>
+                </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <article class="mission-card border-cyan">
+                    <div class="mission-icon">&#128717;</div>
+                    <h5>Shopper Navigation Agent</h5>
+                    <p>Helps mall visitors find any product across all stores using natural language.</p>
+                    <a href="{{ url_for('public.features') }}">Explore Feature -></a>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="section-alt">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">How RetailMind Works</h2>
+        </div>
+        <div class="how-steps">
+            <article class="how-step">
+                <div class="step-circle">1</div>
+                <h5>Connect Your Data Sources</h5>
+                <p>Link your POS systems, inventory management, CRM, and IoT sensors. RetailMind integrates with leading retail platforms.</p>
+            </article>
+            <article class="how-step">
+                <div class="step-circle">2</div>
+                <h5>AI Agents Monitor in Real-Time</h5>
+                <p>Four specialized agents continuously analyze data streams, compute risk scores, and identify opportunities around the clock.</p>
+            </article>
+            <article class="how-step">
+                <div class="step-circle">3</div>
+                <h5>Autonomous Action + Human Approval</h5>
+                <p>Agents recommend actions with full reasoning. You approve or set auto-execution, with a complete audit trail retained.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Real Problems RetailMind Solves</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <article class="scenario-card">
+                    <h5>&#129509; The INR 80,000 Stockout</h5>
+                    <p>
+                        A fashion retailer's bestselling kurta runs out on a Saturday evening. 47 shoppers ask for it.
+                        The store loses INR 80,000 in a single day. RetailMind's Inventory Watch Engine would have
+                        triggered a restock 48 hours earlier.
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6">
+                <article class="scenario-card">
+                    <h5>&#127783; The Monsoon Campaign Misfire</h5>
+                    <p>
+                        Marketing spends INR 40,000 on outdoor sportswear ads during a monsoon week. Zero conversions.
+                        RetailMind's Campaign Engine weighs real-time weather data before every activation.
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6">
+                <article class="scenario-card">
+                    <h5>&#9881; The Escalator That Should Have Been Fixed</h5>
+                    <p>
+                        An escalator motor fails on a busy weekend. Emergency repair costs INR 3.5 Lakh.
+                        RetailMind's Facility Engine detected the vibration anomaly 6 days earlier.
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6">
+                <article class="scenario-card">
+                    <h5>&#128095; The Shopper Who Walked Away</h5>
+                    <p>
+                        A shopper searches for Nike size 9 running shoes across 3 floors, gives up, and orders online.
+                        RetailMind's Shopper Agent would have directed them to the exact store in 10 seconds.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-alt">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">RetailMind Transforms Every Role</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table role-transform-table">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Without RetailMind</th>
+                        <th>With RetailMind</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mall Manager</td>
+                        <td class="pain-point">Reactive firefighting across teams and delayed decisions.</td>
+                        <td class="gain-point">Unified AI briefings with prioritized action queues every hour.</td>
+                    </tr>
+                    <tr>
+                        <td>Store Manager</td>
+                        <td class="pain-point">Frequent stockouts with no early warning.</td>
+                        <td class="gain-point">Real-time restock alerts with supplier lead-time intelligence.</td>
+                    </tr>
+                    <tr>
+                        <td>Marketing Team</td>
+                        <td class="pain-point">Campaign budgets spent without contextual timing.</td>
+                        <td class="gain-point">Weather-aware and traffic-aware campaign activation.</td>
+                    </tr>
+                    <tr>
+                        <td>Facility Team</td>
+                        <td class="pain-point">Breakdowns discovered only after customer impact.</td>
+                        <td class="gain-point">Predictive anomaly detection with preventive work orders.</td>
+                    </tr>
+                    <tr>
+                        <td>Mall Shopper</td>
+                        <td class="pain-point">Long search journeys and missed purchase intent.</td>
+                        <td class="gain-point">Natural language guidance to exact product locations.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="section-light">
+    <div class="container text-center">
+        <h2 class="section-title">Pricing Preview</h2>
+        <div class="row g-4 mt-1">
+            <div class="col-md-4">
+                <div class="pricing-preview-card">
+                    <h4>Starter</h4>
+                    <p class="price">INR 49,999<span>/mo</span></p>
+                    <ul>
+                        <li>Inventory Watch Engine</li>
+                        <li>Basic campaign triggers</li>
+                        <li>Email support</li>
+                    </ul>
+                    <a class="btn btn-outline-primary w-100" href="{{ url_for('auth.register', plan='starter') }}">Start Starter</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pricing-preview-card featured">
+                    <span class="featured-badge">Most Popular</span>
+                    <h4>Professional</h4>
+                    <p class="price">INR 1,49,999<span>/mo</span></p>
+                    <ul>
+                        <li>All 4 autonomous agents</li>
+                        <li>Advanced campaign orchestration</li>
+                        <li>Priority onboarding support</li>
+                    </ul>
+                    <a class="btn btn-primary w-100" href="{{ url_for('auth.register', plan='professional') }}">Start Professional</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pricing-preview-card">
+                    <h4>Enterprise</h4>
+                    <p class="price">Custom</p>
+                    <ul>
+                        <li>Multi-property management</li>
+                        <li>Custom integrations</li>
+                        <li>Dedicated success manager</li>
+                    </ul>
+                    <a class="btn btn-outline-primary w-100" href="{{ url_for('public.demo') }}">Talk to Sales</a>
+                </div>
+            </div>
+        </div>
+        <a class="d-inline-block mt-4" href="{{ url_for('public.pricing') }}">See Full Pricing -></a>
+    </div>
+</section>
+
+<section class="section-alt">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">What Mall Operators Say</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <article class="testimonial-card">
+                    <p><em>RetailMind reduced weekend stockouts by over 40 percent in just six weeks. The inventory alerts are spot on.</em></p>
+                    <h6>Ramesh Nair</h6>
+                    <small>Operations Head, Lulu Mall Kochi</small>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="testimonial-card">
+                    <p><em>Our campaign team now launches contextual promotions in minutes, and conversion rates improved immediately.</em></p>
+                    <h6>Shweta Bansal</h6>
+                    <small>Marketing Director, Select CITYWALK New Delhi</small>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="testimonial-card">
+                    <p><em>The facility anomaly alerts helped us avoid a major escalator outage during holiday rush. That alone justified the investment.</em></p>
+                    <h6>Karthik Subramanian</h6>
+                    <small>Facility Lead, Phoenix Marketcity Chennai</small>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-dark text-center">
+    <div class="container">
+        <h2 class="section-title text-white">Ready to Transform Your Mall Operations?</h2>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a class="btn btn-outline-light btn-lg" href="{{ url_for('public.demo') }}">Request a Demo</a>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Start Free Trial</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ equipment.equipment_name }} - Facility Detail{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/facility.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="facility-page page-container">
+    {% set fps_meta = get_fps_label(fps_result.fps_score if fps_result.fps_score is defined else equipment.fps_score) %}
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <a href="{{ url_for('facility.index') }}" class="small text-muted">&larr; Facility</a>
+            <h2 class="mb-0 mt-1">{{ equipment.equipment_name }}</h2>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge {% if fps_meta.class == 'fps-critical' %}bg-danger{% elif fps_meta.class == 'fps-risk' %}bg-warning text-dark{% elif fps_meta.class == 'fps-monitor' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ fps_meta.label }}</span>
+            <form method="GET" action="{{ url_for('facility.detail', equipment_id=equipment.id) }}" class="d-flex align-items-center gap-2">
+                <label class="small text-muted mb-0" for="metricSelect">Metric</label>
+                <select id="metricSelect" name="metric" class="form-select form-select-sm" onchange="this.form.submit()">
+                    {% for metric in available_metrics %}
+                        <option value="{{ metric }}" {% if selected_metric == metric %}selected{% endif %}>{{ metric | replace('_', ' ') | title }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <div class="facility-detail-grid">
+        <div>
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Equipment Information</div>
+                <div class="card-body">
+                    <div class="equipment-info-grid">
+                        <div><div class="text-muted small">Equipment Name</div><div class="fw-semibold">{{ equipment.equipment_name }}</div></div>
+                        <div><div class="text-muted small">Type</div><div class="fw-semibold">{{ equipment.equipment_type | replace('_', ' ') | title }}</div></div>
+                        <div><div class="text-muted small">Manufacturer</div><div class="fw-semibold">{{ equipment.manufacturer or 'Unknown' }}</div></div>
+
+                        <div><div class="text-muted small">Model Number</div><div class="fw-semibold">{{ equipment.model_number or 'Unknown' }}</div></div>
+                        <div><div class="text-muted small">Zone</div><div class="fw-semibold">{{ equipment.zone or '-' }}</div></div>
+                        <div><div class="text-muted small">Floor</div><div class="fw-semibold">{{ equipment.floor }}</div></div>
+
+                        <div><div class="text-muted small">Installation Date</div><div class="fw-semibold">{{ equipment.installation_date.strftime('%d %b %Y') if equipment.installation_date else 'Unknown' }}</div></div>
+                        <div><div class="text-muted small">Age</div><div class="fw-semibold">{% if age_years is not none %}{{ age_years | round(1) }} years{% else %}Unknown{% endif %}</div></div>
+                        <div><div class="text-muted small">Expected Lifetime</div><div class="fw-semibold">{{ equipment.expected_lifetime_years }} years</div></div>
+
+                        <div><div class="text-muted small">Last Serviced</div><div class="fw-semibold">{{ equipment.last_serviced | relative_time }}</div></div>
+                        <div><div class="text-muted small">Equipment ID</div><div class="fw-semibold">{{ equipment.id }}</div></div>
+                        <div>
+                            <div class="text-muted small">Manual Link</div>
+                            {% if equipment.manual_url is defined and equipment.manual_url %}
+                                <a href="{{ equipment.manual_url }}" target="_blank" rel="noopener">View Equipment Manual -&gt;</a>
+                            {% else %}
+                                <span class="fw-semibold">Not available</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card telemetry-chart-card mb-3">
+                <div class="card-header bg-white fw-semibold">
+                    Sensor Telemetry - {{ selected_metric | replace('_', ' ') | title }} (Last {{ telemetry_data.timestamps | length }} readings)
+                </div>
+                <div class="card-body">
+                    <div style="height: 280px;">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Mean: {{ '%.2f'|format(telemetry_data.mu or 0) }}
+                        |
+                        Std Dev: {{ '%.2f'|format(telemetry_data.sigma or 0) }}
+                        |
+                        Anomalies (24h): {{ fps_result.anomalies_last_24h or 0 }} / {{ fps_result.readings_last_24h or 0 }} readings ({{ '{:.0%}'.format(fps_result.anomaly_rate or 0) }})
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">&#128295; Maintenance History</div>
+                <div class="card-body p-0">
+                    {% if maintenance_history %}
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>WO #</th>
+                                        <th>Date</th>
+                                        <th>Title</th>
+                                        <th>Priority</th>
+                                        <th>Assigned To</th>
+                                        <th>Status</th>
+                                        <th>Cost INR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for work_order, assigned_user in maintenance_history %}
+                                        <tr>
+                                            <td>#{{ work_order.id }}</td>
+                                            <td>{{ work_order.created_at | relative_time }}</td>
+                                            <td>{{ work_order.title }}</td>
+                                            <td><span class="priority-badge {{ work_order.priority }} badge">{{ work_order.priority | title }}</span></td>
+                                            <td>{{ assigned_user.full_name if assigned_user else 'Unassigned' }}</td>
+                                            <td>{{ work_order.status | replace('_', ' ') | title }}</td>
+                                            <td>
+                                                {% if work_order.actual_cost_inr is not none %}
+                                                    {{ '%.0f'|format(work_order.actual_cost_inr) | format_inr }}
+                                                {% elif work_order.estimated_cost_inr is not none %}
+                                                    {{ '%.0f'|format(work_order.estimated_cost_inr) | format_inr }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-3 text-muted">No maintenance history yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">FPS Gauge</div>
+                <div class="card-body text-center">
+                    <div class="srs-gauge-wrapper">
+                        <canvas id="fpsGaugeChart"></canvas>
+                        <div class="srs-gauge-center-text">
+                            <div class="srs-gauge-score">{{ ((fps_result.fps_score or 0) * 100) | round(0) }}%</div>
+                            <div class="srs-gauge-label">{{ fps_meta.label }}</div>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2">Last computed {{ equipment.fps_last_computed | relative_time }}</div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">FPS Factor Breakdown</div>
+                <div class="card-body">
+                    <div class="factor-row">
+                        <div class="factor-meta">Anomaly Rate (AR) - 40% weight</div>
+                        <div class="factor-bar-container"><div class="fps-factor-fill" data-width="{{ ((fps_result.anomaly_rate or 0) * 100) | round(1) }}%"></div></div>
+                        <div class="small">{{ '{:.0%}'.format(fps_result.anomaly_rate or 0) }}</div>
+                    </div>
+                    <div class="factor-row">
+                        <div class="factor-meta">Trend Slope - 35% weight</div>
+                        <div class="factor-bar-container"><div class="fps-factor-fill" data-width="{{ ((fps_result.normalized_slope or 0) * 100) | round(1) }}%"></div></div>
+                        <div class="small">{{ '{:.0%}'.format(fps_result.normalized_slope or 0) }}</div>
+                    </div>
+                    <div class="factor-row">
+                        <div class="factor-meta">Age Factor (AF) - 25% weight</div>
+                        <div class="factor-bar-container"><div class="fps-factor-fill" data-width="{{ ((fps_result.age_factor or 0) * 100) | round(1) }}%"></div></div>
+                        <div class="small">{{ '{:.0%}'.format(fps_result.age_factor or 0) }}</div>
+                    </div>
+
+                    <div class="small text-muted mt-2">FPS = 0.40xAR + 0.35xTrend + 0.25xAF</div>
+                    <div class="small text-muted mt-2">
+                        Equipment is {% if age_years is not none %}{{ age_years | round(1) }}{% else %}unknown{% endif %} years old
+                        ({{ '{:.0%}'.format(fps_result.age_factor or 0) }} of {{ equipment.expected_lifetime_years }} year lifespan used)
+                    </div>
+                </div>
+            </div>
+
+            {% if pending_action %}
+                <div class="agent-recommendation-card mb-3">
+                    <div class="agent-recommendation-header">
+                        <span>&#129302;</span>
+                        <span class="fw-semibold">Agent Recommendation</span>
+                    </div>
+                    <div class="agent-reasoning-text">{{ pending_action.agent_reasoning }}</div>
+                    <div class="agent-recommendation-actions">
+                        <button id="approveActionBtn" data-action-id="{{ pending_action.id }}" class="btn btn-success w-100">Approve Work Order</button>
+                        <button id="rejectActionBtn" data-action-id="{{ pending_action.id }}" class="btn btn-outline-danger w-100">Reject</button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mb-3 border-success">
+                    <div class="card-body text-success fw-semibold">&#9989; No pending maintenance actions for this equipment.</div>
+                </div>
+            {% endif %}
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Create Work Order</div>
+                <div class="card-body">
+                    <form id="quickWorkOrderForm" method="POST" action="{{ url_for('facility.create_work_order') }}">
+                        {{ work_order_form.hidden_tag() }}
+                        <input type="hidden" name="equipment_id" value="{{ equipment.id }}">
+
+                        <div class="mb-2">
+                            <label class="form-label small" for="quick-title">Title</label>
+                            {{ work_order_form.title(class='form-control form-control-sm', id='quick-title') }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small" for="quick-description">Description</label>
+                            {{ work_order_form.description(class='form-control form-control-sm', id='quick-description', rows='4') }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small" for="quick-priority">Priority</label>
+                            {{ work_order_form.priority(class='form-select form-select-sm', id='quick-priority') }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small" for="quick-assign">Assign To</label>
+                            {{ work_order_form.assigned_to_user_id(class='form-select form-select-sm', id='quick-assign') }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small" for="quick-cost">Estimated Cost (INR)</label>
+                            {{ work_order_form.estimated_cost_inr(class='form-control form-control-sm', id='quick-cost') }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create Work Order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+const telemetryData = {{ telemetry_data | tojson | safe }};
+const fpsScore = {{ fps_result.fps_score if fps_result.fps_score is defined else 0 }};
+const fpsFactor = {{ fps_result | tojson | safe }};
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/facility.js') }}" defer></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Platform Billing & Revenue{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">Platform Billing & Revenue</h2>
+                <div class="text-muted small">Subscription lifecycle and captured payment analytics</div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="sa-kpi-tile sa-kpi-navy text-white">
+                    <div class="sa-kpi-value text-white">&#8377;{{ total_revenue_all_time | format_inr }}</div>
+                    <div class="sa-kpi-label text-white-50">Total Revenue (All Time)</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">&#8377;{{ total_revenue_this_month | format_inr }}</div>
+                    <div class="sa-kpi-label">This Month</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ active_subscription_count }}</div>
+                    <div class="sa-kpi-label">Active Subscriptions</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">&#8377;{{ mrr_estimate | format_inr }}</div>
+                    <div class="sa-kpi-label">MRR Estimate /mo</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="sa-kpi-tile {% if past_due_subscriptions|length > 0 %}sa-kpi-danger{% endif %}">
+                    <div class="sa-kpi-value {% if past_due_subscriptions|length > 0 %}sa-status-error{% endif %}">{{ past_due_subscriptions|length }}</div>
+                    <div class="sa-kpi-label">Outstanding or Past Due</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="billing-charts-grid mb-3">
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Revenue by Month (Last 12 Months)</div>
+                <div class="card-body">
+                    <canvas id="revenueByMonthChart" height="120"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Revenue by Plan Tier</div>
+                <div class="card-body">
+                    <canvas id="revenueByTierChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {% if past_due_subscriptions %}
+        <div class="card mb-3 sa-outstanding-card">
+            <div class="card-header bg-white fw-semibold">Outstanding Subscriptions</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Trial Ends / Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subscription, property in past_due_subscriptions %}
+                            <tr>
+                                <td>{{ property.name }}</td>
+                                <td>{{ subscription.plan_name|title }}</td>
+                                <td><span class="badge {% if subscription.status == 'past_due' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ subscription.status|replace('_', ' ')|title }}</span></td>
+                                <td>
+                                    {% if subscription.trial_ends_at %}
+                                        {{ subscription.trial_ends_at.strftime('%d %b %Y') }}
+                                    {% elif subscription.current_period_end %}
+                                        {{ subscription.current_period_end.strftime('%d %b %Y') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <button class="btn btn-sa-warning btn-sm btn-extend-trial" type="button" data-property-id="{{ property.id }}">Extend Trial +14 days</button>
+                                        <select class="form-select form-select-sm select-billing-tier" data-property-id="{{ property.id }}" style="width: 150px;">
+                                            <option value="starter" {% if subscription.plan_name == 'starter' %}selected{% endif %}>Starter</option>
+                                            <option value="professional" {% if subscription.plan_name == 'professional' %}selected{% endif %}>Professional</option>
+                                            <option value="enterprise" {% if subscription.plan_name == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">All Subscriptions</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Plan</th>
+                                <th>Billing Cycle</th>
+                                <th>Status</th>
+                                <th>Period Start</th>
+                                <th>Period End</th>
+                                <th>Razorpay ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subscription, property in subscriptions %}
+                            <tr>
+                                <td>{{ property.name }}</td>
+                                <td><span class="badge {% if subscription.plan_name == 'enterprise' %}badge-tier-enterprise{% elif subscription.plan_name == 'professional' %}badge-tier-professional{% else %}badge-tier-starter{% endif %}">{{ subscription.plan_name|title }}</span></td>
+                                <td>{{ subscription.billing_cycle|title }}</td>
+                                <td><span class="badge {% if subscription.status == 'active' %}text-bg-success{% elif subscription.status == 'trial' %}text-bg-warning{% elif subscription.status == 'past_due' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">{{ subscription.status|replace('_', ' ')|title }}</span></td>
+                                <td>{{ subscription.current_period_start.strftime('%d %b %Y') if subscription.current_period_start else '-' }}</td>
+                                <td>{{ subscription.current_period_end.strftime('%d %b %Y') if subscription.current_period_end else '-' }}</td>
+                                <td><span class="monospace-small">{{ subscription.razorpay_subscription_id or '-' }}</span></td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sa-warning btn-sm btn-extend-trial" type="button" data-property-id="{{ property.id }}">+14d Trial</button>
+                                        <select class="form-select form-select-sm select-billing-tier" data-property-id="{{ property.id }}" style="width: 130px;">
+                                            <option value="starter" {% if subscription.plan_name == 'starter' %}selected{% endif %}>Starter</option>
+                                            <option value="professional" {% if subscription.plan_name == 'professional' %}selected{% endif %}>Professional</option>
+                                            <option value="enterprise" {% if subscription.plan_name == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="8" class="text-muted">No subscriptions found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Recent Payment History</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Property</th>
+                                <th>Plan</th>
+                                <th>Amount &#8377;</th>
+                                <th>Status</th>
+                                <th>Payment ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment, property in payments %}
+                            <tr>
+                                <td>{{ payment.created_at.strftime('%d %b %Y %H:%M') if payment.created_at else '-' }}</td>
+                                <td>{{ property.name }}</td>
+                                <td>{{ payment.plan_name|title if payment.plan_name else '-' }}</td>
+                                <td>&#8377;{{ payment.amount_inr|int|format_inr }}</td>
+                                <td><span class="badge {% if payment.status == 'captured' %}text-bg-success{% elif payment.status == 'created' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ payment.status|title }}</span></td>
+                                <td><span class="monospace-small">{{ payment.razorpay_payment_id or '-' }}</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-muted">No payment records found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}">
+const revenueByMonth = {{ revenue_by_month | tojson | safe }};
+const revenueByTier = {{ revenue_by_tier | tojson | safe }};
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

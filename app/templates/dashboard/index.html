@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h1 class="mb-0">Operations Dashboard</h1>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">Last updated: {{ current_time.strftime('%I:%M %p') }}</span>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="dashboard-refresh-btn">Refresh</button>
+        </div>
+    </div>
+
+    {% set inventory_delta = kpi_data.inventory_alerts_today - kpi_data.inventory_alerts_yesterday %}
+    {% set campaign_delta = kpi_data.campaigns_this_week - kpi_data.campaigns_last_week %}
+
+    <div class="kpi-grid mb-4">
+        <div class="kpi-tile {% if kpi_data.active_missions == 4 %}success{% elif kpi_data.active_missions >= 2 %}warning{% else %}danger{% endif %}">
+            <div>
+                <div class="kpi-title">Active Agent Missions</div>
+                <div class="kpi-value"><span id="kpi-active-missions">{{ kpi_data.active_missions }}</span> / 4 {% if kpi_data.active_missions == 4 %}<span class="kpi-mission-indicator"></span>{% endif %}</div>
+                {% if kpi_data.active_missions == 4 %}
+                    <div class="kpi-trend positive">All systems operational</div>
+                {% else %}
+                    <div class="kpi-trend neutral">{{ 4 - kpi_data.active_missions }} missions paused</div>
+                {% endif %}
+            </div>
+            <div class="kpi-icon">CPU</div>
+        </div>
+
+        <div class="kpi-tile {% if kpi_data.inventory_alerts_today > 5 %}danger{% elif kpi_data.inventory_alerts_today > 0 %}warning{% else %}success{% endif %}">
+            <div>
+                <div class="kpi-title">Inventory Alerts Today</div>
+                <div class="kpi-value" id="kpi-inventory-alerts">{{ kpi_data.inventory_alerts_today }}</div>
+                <div class="kpi-trend {% if inventory_delta > 0 %}negative{% elif inventory_delta < 0 %}positive{% else %}neutral{% endif %}">
+                    {% if inventory_delta > 0 %}
+                        +{{ inventory_delta }} vs yesterday
+                    {% elif inventory_delta < 0 %}
+                        {{ inventory_delta }} vs yesterday
+                    {% else %}
+                        No change vs yesterday
+                    {% endif %}
+                </div>
+            </div>
+            <div class="kpi-icon">BOX</div>
+        </div>
+
+        <div class="kpi-tile info">
+            <div>
+                <div class="kpi-title">Campaigns This Week</div>
+                <div class="kpi-value" id="kpi-campaigns-week">{{ kpi_data.campaigns_this_week }}</div>
+                <div class="kpi-trend {% if campaign_delta >= 0 %}positive{% else %}negative{% endif %}">
+                    {% if campaign_delta >= 0 %}
+                        +{{ campaign_delta }} vs last week
+                    {% else %}
+                        {{ campaign_delta }} vs last week
+                    {% endif %}
+                </div>
+            </div>
+            <div class="kpi-icon">MEGA</div>
+        </div>
+
+        <div class="kpi-tile {% if kpi_data.open_work_orders > 0 %}danger{% else %}success{% endif %}">
+            <div>
+                <div class="kpi-title">Open Work Orders</div>
+                <div class="kpi-value" id="kpi-work-orders">{{ kpi_data.open_work_orders }}</div>
+                {% if kpi_data.open_work_orders == 0 %}
+                    <div class="kpi-trend positive">No critical issues</div>
+                {% else %}
+                    <div class="kpi-trend negative">Review required</div>
+                {% endif %}
+            </div>
+            <div class="kpi-icon">WRENCH</div>
+        </div>
+    </div>
+
+    <div class="mission-card-grid mb-4">
+        {% set mission_map = [
+            ('inventory', 'Inventory Mission', agent_status.inventory_enabled, 'Checked 30 SKUs, 2 at risk', '30 SKUs monitored | 2 at risk', url_for('inventory.index')),
+            ('campaign', 'Campaign Mission', agent_status.campaign_enabled, '1 opportunity identified', '1 opportunity pending', url_for('campaigns.index')),
+            ('facility', 'Facility Mission', agent_status.facility_enabled, 'All equipment normal', '5 equipment healthy', url_for('facility.index')),
+            ('shopper', 'Shopper Mission', agent_status.shopper_enabled, '3 queries resolved', '3 queries today', url_for('shopper.index'))
+        ] %}
+
+        {% for key, label, enabled, description, quick_stat, route_url in mission_map %}
+            <a href="{{ route_url }}" class="mission-card {{ key }} text-decoration-none" data-mission="{{ key }}">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="fw-semibold">{{ label }}</div>
+                    <span class="mission-status-badge {{ 'running' if enabled else 'paused' }}">
+                        <span class="status-dot {{ 'running' if enabled else 'paused' }}"></span>
+                        <span class="status-text">{{ 'Running' if enabled else 'Paused' }}</span>
+                    </span>
+                </div>
+                <div class="text-muted small mt-2 mission-last-action">Last action: just now</div>
+                <div class="small mt-1 mission-last-description">{{ description }}</div>
+                <div class="small text-muted mt-2 mission-quick-stat">{{ quick_stat }}</div>
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="dashboard-grid">
+        <div>
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="fw-semibold">Live Foot Traffic Heatmap</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border">Updated every 5 min</span>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Floor selector">
+                            <button type="button" class="btn btn-outline-secondary active">Floor 1</button>
+                            <button type="button" class="btn btn-outline-secondary">Floor 2</button>
+                            <button type="button" class="btn btn-outline-secondary">Floor 3</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="heatmap-container">
+                        <svg class="heatmap-svg" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mall foot traffic heatmap">
+                            <rect x="1" y="1" width="598" height="398" fill="none" stroke="#E5E7EB" stroke-width="2"></rect>
+
+                            {% macro zone_color(count, max_count) -%}
+                                {% set ratio = (count / max_count) if max_count else 0 %}
+                                {% if ratio <= 0.2 %}
+                                    #DBEAFE
+                                {% elif ratio <= 0.4 %}
+                                    #93C5FD
+                                {% elif ratio <= 0.6 %}
+                                    #FDE68A
+                                {% elif ratio <= 0.8 %}
+                                    #FB923C
+                                {% else %}
+                                    #DC2626
+                                {% endif %}
+                            {%- endmacro %}
+
+                            <rect id="zone-A" class="zone-rect" x="0" y="0" width="180" height="400" rx="4" fill="{{ zone_color(foot_traffic_data['A'], heatmap_max_count) }}" stroke="#FFFFFF" stroke-width="2">
+                                <title>Zone A: {{ foot_traffic_data['A'] }} visitors</title>
+                            </rect>
+                            <rect id="zone-B" class="zone-rect" x="180" y="0" width="140" height="200" rx="4" fill="{{ zone_color(foot_traffic_data['B'], heatmap_max_count) }}" stroke="#FFFFFF" stroke-width="2">
+                                <title>Zone B: {{ foot_traffic_data['B'] }} visitors</title>
+                            </rect>
+                            <rect id="zone-C" class="zone-rect" x="320" y="0" width="140" height="200" rx="4" fill="{{ zone_color(foot_traffic_data['C'], heatmap_max_count) }}" stroke="#FFFFFF" stroke-width="2">
+                                <title>Zone C: {{ foot_traffic_data['C'] }} visitors</title>
+                            </rect>
+                            <rect id="zone-D" class="zone-rect" x="180" y="200" width="280" height="200" rx="4" fill="{{ zone_color(foot_traffic_data['D'], heatmap_max_count) }}" stroke="#FFFFFF" stroke-width="2">
+                                <title>Zone D: {{ foot_traffic_data['D'] }} visitors</title>
+                            </rect>
+                            <rect id="zone-E" class="zone-rect" x="460" y="0" width="140" height="400" rx="4" fill="{{ zone_color(foot_traffic_data['E'], heatmap_max_count) }}" stroke="#FFFFFF" stroke-width="2">
+                                <title>Zone E: {{ foot_traffic_data['E'] }} visitors</title>
+                            </rect>
+
+                            <rect x="250" y="145" width="100" height="110" rx="8" fill="#F3F4F6" stroke="#E5E7EB"></rect>
+
+                            <text x="90" y="180" text-anchor="middle" class="zone-label">Zone A</text>
+                            <text id="zone-A-count" x="90" y="205" text-anchor="middle" class="zone-label">{{ foot_traffic_data['A'] }}</text>
+
+                            <text x="250" y="95" text-anchor="middle" class="zone-label">Zone B</text>
+                            <text id="zone-B-count" x="250" y="120" text-anchor="middle" class="zone-label">{{ foot_traffic_data['B'] }}</text>
+
+                            <text x="390" y="95" text-anchor="middle" class="zone-label">Zone C</text>
+                            <text id="zone-C-count" x="390" y="120" text-anchor="middle" class="zone-label">{{ foot_traffic_data['C'] }}</text>
+
+                            <text x="320" y="295" text-anchor="middle" class="zone-label">Zone D</text>
+                            <text id="zone-D-count" x="320" y="320" text-anchor="middle" class="zone-label">{{ foot_traffic_data['D'] }}</text>
+
+                            <text x="530" y="180" text-anchor="middle" class="zone-label">Zone E</text>
+                            <text id="zone-E-count" x="530" y="205" text-anchor="middle" class="zone-label">{{ foot_traffic_data['E'] }}</text>
+                        </svg>
+                    </div>
+
+                    <div class="heatmap-legend">
+                        <span>Low Traffic</span>
+                        <span class="legend-swatch" style="background:#DBEAFE;"></span>
+                        <span class="legend-swatch" style="background:#93C5FD;"></span>
+                        <span class="legend-swatch" style="background:#FDE68A;"></span>
+                        <span class="legend-swatch" style="background:#FB923C;"></span>
+                        <span class="legend-swatch" style="background:#DC2626;"></span>
+                        <span>High Traffic</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="fw-semibold">Pending Agent Actions</div>
+                    <span class="badge bg-light text-dark border" id="pending-actions-count">{{ pending_actions|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if pending_actions %}
+                        <div class="table-responsive">
+                            <table class="actions-table w-100">
+                                <tbody>
+                                    {% for action in pending_actions %}
+                                        <tr id="pending-action-{{ action.id }}">
+                                            <td>
+                                                {% if action.mission_type == 'inventory' %}
+                                                    <span>📦</span>
+                                                {% elif action.mission_type == 'campaign' %}
+                                                    <span>📣</span>
+                                                {% elif action.mission_type == 'facility' %}
+                                                    <span>🔧</span>
+                                                {% else %}
+                                                    <span>🛍️</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold small">{{ action.description | truncate(80) }}</div>
+                                                <div class="text-muted small">{{ action.entity_id or 'Entity not available' }}</div>
+                                            </td>
+                                            <td>
+                                                {% set score_value = action.score or 0 %}
+                                                <span class="action-score-badge {% if score_value > 0.85 %}critical{% elif score_value >= 0.70 %}high{% else %}medium{% endif %}">
+                                                    {{ '%.2f'|format(score_value) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn-approve" data-action-id="{{ action.id }}">Approve</button>
+                                                    <button type="button" class="btn-reject" data-action-id="{{ action.id }}">Reject</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="fs-3">✅</div>
+                            <h6 class="mt-2">No Pending Actions</h6>
+                            <p class="text-muted mb-0">Your agents are operating autonomously and all recent actions have been reviewed.</p>
+                        </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('agent.logs') }}" class="small fw-semibold d-inline-block mt-3">View All Agent Logs -></a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card mb-4">
+                <div class="card-header bg-white fw-semibold">Today's Foot Traffic</div>
+                <div class="card-body">
+                    <div class="chart-wrap">
+                        <canvas id="todayTrafficChart" height="180"></canvas>
+                    </div>
+                    <div class="row g-2 mt-3">
+                        <div class="col-4">
+                            <div class="small-stat-card">
+                                <div class="small text-muted">Peak Hour</div>
+                                <div class="fw-semibold">{{ peak_hour_label }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small-stat-card">
+                                <div class="small text-muted">Total Visitors</div>
+                                <div class="fw-semibold">{{ total_visitors }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small-stat-card">
+                                <div class="small text-muted">Busiest Zone</div>
+                                <div class="fw-semibold">{{ busiest_zone }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="fw-semibold">Recent Alerts</div>
+                    <button type="button" class="btn btn-link btn-sm p-0" id="mark-all-read-btn">Mark All Read</button>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary alert-filter-tab active" data-filter="all">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary alert-filter-tab" data-filter="inventory_alert">Inventory</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary alert-filter-tab" data-filter="campaign_opportunity">Campaign</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary alert-filter-tab" data-filter="facility_alert">Facility</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary alert-filter-tab" data-filter="system">System</button>
+                    </div>
+
+                    <div id="recent-alert-feed">
+                        {% for notification in recent_notifications %}
+                            <div class="alert-feed-row {% if not notification.is_read %}unread{% endif %}" data-notif-id="{{ notification.id }}" data-is-read="{{ 'true' if notification.is_read else 'false' }}" data-type="{{ notification.notification_type }}" data-action-url="{{ notification.action_url or '#' }}">
+                                <div>
+                                    {% if notification.severity == 'critical' %}
+                                        <span class="severity-icon critical">🔴</span>
+                                    {% elif notification.severity == 'warning' %}
+                                        <span class="severity-icon warning">🟠</span>
+                                    {% else %}
+                                        <span class="severity-icon info">🔵</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold {% if notification.is_read %}fw-normal{% endif %}">{{ notification.title }}</div>
+                                    <div class="text-muted small">{{ notification.message | truncate(60) }}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">{{ notification.created_at | relative_time }}</div>
+                                </div>
+                                <a href="{{ notification.action_url or '#' }}" class="text-decoration-none">-></a>
+                            </div>
+                        {% else %}
+                            <div class="text-muted small">No alerts yet.</div>
+                        {% endfor %}
+                    </div>
+
+                    <a href="{{ url_for('notifications.index') }}" class="small fw-semibold d-inline-block mt-3">View All Notifications -></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-md-4">
+            <div class="card summary-stat-card">
+                <div class="card-body">
+                    <div class="text-muted small">Revenue Attributed by Agent Today</div>
+                    <div class="fw-semibold fs-5">₹{{ today_stats.revenue_attributed_today | int | format_inr }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card summary-stat-card">
+                <div class="card-body">
+                    <div class="text-muted small">Agent Actions Today</div>
+                    <div class="fw-semibold fs-5">{{ today_stats.agent_actions_today }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card summary-stat-card">
+                <div class="card-body">
+                    <div class="text-muted small">Alerts Resolved Today</div>
+                    <div class="fw-semibold fs-5">{{ today_stats.alerts_resolved_today }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+    const todayHourlyTraffic = {{ today_hourly_traffic | tojson | safe }};
+    const footTrafficZones = {{ foot_traffic_data | tojson | safe }};
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+{% endif %}
+{% endblock %}

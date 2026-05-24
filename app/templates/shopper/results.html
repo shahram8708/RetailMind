@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopper Results{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shopper.css') }}">
+<style>
+    .navbar,
+    .site-footer {
+        display: none !important;
+    }
+
+    .main-content.authenticated {
+        padding-top: 0 !important;
+        min-height: 100vh;
+    }
+
+    .alerts-container {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shopper-page shopper-results-page">
+    <header class="shopper-topbar">
+        <div class="shopper-topbar-brand">RetailMind</div>
+        <div class="shopper-topbar-property">{{ property.name if property else 'RetailMind Mall' }}</div>
+        <div class="shopper-topbar-badge">Powered by AI</div>
+    </header>
+
+    <section class="results-header-bar">
+        <div>
+            <a href="{{ url_for('shopper.index', property_id=interaction.property_id) }}" class="small fw-semibold">← Search Again</a>
+        </div>
+        <div class="results-header-title text-center">
+            Showing {{ results_count }} result{% if results_count != 1 %}s{% endif %} for:
+            <strong>"{{ interaction.query_text }}"</strong>
+        </div>
+        <div class="small text-muted text-end">Searched {{ interaction.response_time_ms or 0 }}ms ago</div>
+    </section>
+
+    <section class="results-layout">
+        <div class="results-list">
+            {% if results_count == 0 %}
+            <div class="card p-5 text-center">
+                <div style="font-size:2.5rem;">🔍</div>
+                <h4 class="mt-2">No products found matching your search.</h4>
+                <p class="text-muted mb-3">Try searching with broader terms, check if the product category exists in this mall, or browse categories above.</p>
+                <a class="btn btn-primary" href="{{ url_for('shopper.index', property_id=interaction.property_id) }}">Back to Search</a>
+            </div>
+            {% else %}
+                {% for result in results %}
+                <article
+                    class="result-card"
+                    data-zone="{{ result.tenant_zone }}"
+                    data-floor="{{ result.tenant_floor }}"
+                    data-sku-id="{{ result.sku_id }}"
+                >
+                    <div class="rank-badge">#{{ loop.index }}</div>
+
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <div>
+                            <div class="small text-muted mb-1">{% if result.category == 'Fashion' %}👗{% elif result.category == 'Footwear' %}👟{% elif result.category == 'Electronics' %}📱{% elif result.category == 'Jewellery' %}💍{% elif result.category == 'Food & Beverage' %}🍔{% elif result.category == 'Pharmacy' %}💊{% elif result.category == 'Books' %}📚{% elif result.category == 'Sportswear' %}🏋️{% else %}🛍️{% endif %} {{ result.category or 'Product' }}</div>
+                            <h5 class="mb-1">{{ result.product_name }}</h5>
+                            <div class="small text-muted">{{ result.brand or 'Unknown Brand' }} · SKU: {{ result.sku_id }}</div>
+                        </div>
+                        <span class="badge bg-light text-dark border">{{ (result.relevance_score * 100) | int }}% match</span>
+                    </div>
+
+                    {% if result.color or result.size %}
+                    <div class="d-flex align-items-center flex-wrap gap-2 small text-muted mb-2">
+                        {% if result.color %}
+                        <span class="d-inline-flex align-items-center gap-1"><span class="color-dot" style="background: {{ result.color|lower if result.color else '#D1D5DB' }};"></span>{{ result.color }}</span>
+                        {% endif %}
+                        {% if result.size %}
+                        <span class="badge text-bg-light border">Size {{ result.size }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="product-price">₹{{ (result.unit_price or 0) | int | format_inr }}</div>
+                    {% if result.discount_text %}
+                    <div class="small text-teal mb-2">🏷️ {{ result.discount_text }}</div>
+                    {% endif %}
+
+                    <div class="mb-2">
+                        {% if result.stock_status == 'In Stock' %}
+                            <span class="badge stock-badge in-stock">In Stock</span>
+                        {% elif result.stock_status == 'Low Stock' %}
+                            <span class="badge stock-badge low-stock">Low Stock — Only {{ result.stock_level }} left!</span>
+                        {% else %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="store-box">
+                        <div class="store-name">{{ result.tenant_name }}</div>
+                        <div class="store-location">{{ result.floor_label }} · Zone {{ result.tenant_zone }} · Unit {{ result.tenant_unit }}</div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <button
+                            class="btn btn-primary btn-sm btn-get-directions"
+                            type="button"
+                            data-sku-id="{{ result.sku_id }}"
+                            data-nav-instructions="{{ result.nav_instructions|e }}"
+                            data-tenant-name="{{ result.tenant_name|e }}"
+                            data-floor="{{ result.tenant_floor }}"
+                            data-zone="{{ result.tenant_zone }}"
+                            data-unit="{{ result.tenant_unit|e }}"
+                        >🗺️ Get Directions</button>
+                        <button
+                            class="btn btn-outline-secondary btn-sm btn-copy-directions"
+                            type="button"
+                            data-nav-instructions="{{ result.nav_instructions|e }}"
+                        >🔔 Find This Product</button>
+                    </div>
+
+                    {% if result.active_campaign %}
+                    <div class="campaign-banner">🎉 {{ result.active_campaign }} — In store offer available</div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <aside class="floor-plan-sticky">
+            {% if results_count > 0 %}
+            <div class="card floor-plan-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Mall Floor Plan</h6>
+                        <div class="btn-group btn-group-sm floor-selector-tabs" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-floor="0">G</button>
+                            <button type="button" class="btn btn-outline-primary" data-floor="1">1</button>
+                            <button type="button" class="btn btn-outline-primary" data-floor="2">2</button>
+                            <button type="button" class="btn btn-outline-primary" data-floor="3">3</button>
+                        </div>
+                    </div>
+
+                    <svg class="floor-plan-svg" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="300" height="400" rx="8" fill="#F8FAFC" stroke="#E5E7EB" />
+                        <rect x="0" y="0" width="95" height="400" fill="#DBEAFE" stroke="#ffffff" />
+                        <rect x="95" y="0" width="60" height="180" fill="#D1FAE5" stroke="#ffffff" />
+                        <rect x="155" y="0" width="65" height="180" fill="#FDE68A" stroke="#ffffff" />
+                        <rect x="95" y="180" width="125" height="220" fill="#FECACA" stroke="#ffffff" />
+                        <rect x="220" y="0" width="80" height="400" fill="#E9D5FF" stroke="#ffffff" />
+
+                        <text x="48" y="200" text-anchor="middle" class="zone-svg-label">Zone A</text>
+                        <text x="125" y="95" text-anchor="middle" class="zone-svg-label">Zone B</text>
+                        <text x="187" y="95" text-anchor="middle" class="zone-svg-label">Zone C</text>
+                        <text x="157" y="300" text-anchor="middle" class="zone-svg-label">Zone D</text>
+                        <text x="260" y="200" text-anchor="middle" class="zone-svg-label">Zone E</text>
+
+                        {% for result in results %}
+                            {% set x = 20 %}
+                            {% set y = 60 %}
+                            {% if result.tenant_zone == 'A' %}
+                                {% set x = 45 %}
+                                {% set y = 70 + (loop.index0 * 25) %}
+                            {% elif result.tenant_zone == 'B' %}
+                                {% set x = 125 %}
+                                {% set y = 60 + (loop.index0 * 20) %}
+                            {% elif result.tenant_zone == 'C' %}
+                                {% set x = 185 %}
+                                {% set y = 60 + (loop.index0 * 20) %}
+                            {% elif result.tenant_zone == 'D' %}
+                                {% set x = 155 %}
+                                {% set y = 230 + (loop.index0 * 22) %}
+                            {% elif result.tenant_zone == 'E' %}
+                                {% set x = 255 %}
+                                {% set y = 80 + (loop.index0 * 24) %}
+                            {% endif %}
+
+                            <g
+                                class="floor-pin {% if loop.first %}active{% endif %}"
+                                data-sku-id="{{ result.sku_id }}"
+                                data-floor="{{ result.tenant_floor }}"
+                                data-zone="{{ result.tenant_zone }}"
+                            >
+                                <circle cx="{{ x }}" cy="{{ y }}" r="8" />
+                                <text x="{{ x }}" y="{{ y + 3 }}" text-anchor="middle" class="pin-index">{{ loop.index }}</text>
+                            </g>
+                        {% endfor %}
+                    </svg>
+                </div>
+            </div>
+            {% endif %}
+        </aside>
+    </section>
+</div>
+
+<div class="modal fade" id="navModal" tabindex="-1" aria-labelledby="navModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="navModalLabel">🗺️ How to Get There</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="destination-info-box" id="modalDestinationBox">
+                    <div class="fw-semibold" id="modalStoreName">Store</div>
+                    <div class="small text-muted" id="modalStoreMeta">Zone · Floor · Unit</div>
+                </div>
+
+                <ol class="nav-step-list" id="modalNavSteps"></ol>
+
+                <div class="floor-indicator-row" id="modalFloorIndicator">
+                    <span class="floor-pill" data-floor="0">G</span>
+                    <span class="floor-pill" data-floor="1">1</span>
+                    <span class="floor-pill" data-floor="2">2</span>
+                    <span class="floor-pill" data-floor="3">3</span>
+                </div>
+
+                <div class="alert alert-info mb-0 mt-3 py-2">💡 Look for the RetailMind Zone signs at each intersection.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+const searchResults = {{ results | tojson | safe }};
+const queryId = {{ interaction.id }};
+const logClickUrl = "{{ url_for('shopper.log_click') }}";
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/shopper.js') }}"></script>
+{% endif %}
+{% endblock %}

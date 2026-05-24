@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.product_name }} - Inventory Detail{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-page">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('inventory.index') }}">Inventory</a></li>
+            <li class="breadcrumb-item active" aria-current="page">SKU Detail</li>
+        </ol>
+    </nav>
+
+    <div class="sku-detail-grid">
+        <div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="mb-3">{{ item.product_name }}</h3>
+
+                    <div class="sku-info-grid">
+                        <div class="sku-info-item"><div class="label">SKU ID</div><div class="value">{{ item.sku_id }}</div></div>
+                        <div class="sku-info-item"><div class="label">Brand</div><div class="value">{{ item.brand or 'N/A' }}</div></div>
+                        <div class="sku-info-item"><div class="label">Category</div><div class="value">{{ item.category or 'N/A' }}</div></div>
+                        <div class="sku-info-item"><div class="label">Color</div><div class="value">{{ item.color or 'N/A' }}</div></div>
+                        <div class="sku-info-item"><div class="label">Size</div><div class="value">{{ item.size or 'N/A' }}</div></div>
+                        <div class="sku-info-item"><div class="label">Current Stock</div><div class="value">{{ item.stock_level }}</div></div>
+                        <div class="sku-info-item"><div class="label">Reorder Threshold</div><div class="value">{{ item.reorder_threshold }}</div></div>
+                        <div class="sku-info-item"><div class="label">Unit Price</div><div class="value">&#8377;{{ item.unit_price | int | format_inr }}</div></div>
+                        <div class="sku-info-item"><div class="label">Cost Price</div><div class="value">&#8377;{{ item.cost_price | int | format_inr }}</div></div>
+                        <div class="sku-info-item"><div class="label">Supplier Lead Time</div><div class="value">{{ item.supplier_lead_time_hours }} hrs</div></div>
+                        <div class="sku-info-item"><div class="label">Supplier Name</div><div class="value">{{ item.supplier_name or 'N/A' }}</div></div>
+                        <div class="sku-info-item"><div class="label">Supplier Email</div><div class="value">{{ item.supplier_email or 'N/A' }}</div></div>
+                    </div>
+
+                    <hr>
+                    <div class="small text-muted mb-2">Last Restocked: {{ item.last_restocked | relative_time }}</div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="fw-semibold">{{ tenant.name }}</span>
+                        <span class="badge bg-light text-dark border">Zone {{ tenant.zone }}</span>
+                        <span class="badge bg-light text-dark border">Floor {{ tenant.floor }}</span>
+                        <span class="badge bg-light text-dark border">Unit {{ tenant.unit_number }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Sales Velocity - Last 48 Hours</div>
+                <div class="card-body">
+                    <div style="height: 180px;">
+                        <canvas id="velocityChart"></canvas>
+                    </div>
+                    {% if not velocity_data.units_sold or velocity_data.units_sold | sum == 0 %}
+                        <div class="text-muted small mt-2">No sales recorded in the last 48 hours.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Stock Level History - Last 30 Days</div>
+                <div class="card-body">
+                    <div style="height: 160px;">
+                        <canvas id="stockHistoryChart"></canvas>
+                    </div>
+                    {% if not stock_history.stock_levels %}
+                        <div class="text-muted small mt-2">No stock history available.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Restock History</div>
+                <div class="card-body p-0">
+                    {% if stockout_history %}
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>SRS Score</th>
+                                        <th>Status</th>
+                                        <th>Est. Revenue Protected</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in stockout_history %}
+                                        <tr>
+                                            <td>{{ row.date | relative_time }}</td>
+                                            <td>{{ row.description }}</td>
+                                            <td>{{ (row.srs_score * 100) | int }}%</td>
+                                            <td><span class="badge bg-light text-dark border">{{ row.status }}</span></td>
+                                            <td>&#8377;{{ row.estimated_revenue_loss | int | format_inr }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-3 text-muted">No restock actions recorded yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Stockout Risk Score</div>
+                <div class="card-body text-center">
+                    <div class="srs-gauge-wrapper">
+                        <canvas id="srsGaugeChart"></canvas>
+                        <div class="srs-gauge-center-text">
+                            <div class="srs-gauge-score" style="color: {% if item.srs_score >= 0.85 %}#EF4444{% elif item.srs_score >= 0.70 %}#F97316{% elif item.srs_score >= 0.50 %}#F59E0B{% else %}#10B981{% endif %};">
+                                {{ (item.srs_score * 100) | int }}%
+                            </div>
+                            <div class="srs-gauge-label">{{ risk_label }}</div>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-3">Computed at {{ item.srs_last_computed | relative_time }}</div>
+                    <div class="small text-muted">Next computation in ~15 min</div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Score Breakdown</div>
+                <div class="card-body">
+                    <div class="factor-row">
+                        <div class="factor-meta">Lead Time Risk</div>
+                        <div class="factor-bar-container"><div class="factor-bar-fill" style="width: {{ (srs_details.get('ltr', 0) * 100) | int }}%;"></div></div>
+                        <div class="small">{{ (srs_details.get('ltr', 0) * 100) | int }}%</div>
+                    </div>
+                    <div class="factor-row">
+                        <div class="factor-meta">Threshold Proximity</div>
+                        <div class="factor-bar-container"><div class="factor-bar-fill" style="width: {{ (srs_details.get('tpf', 0) * 100) | int }}%;"></div></div>
+                        <div class="small">{{ (srs_details.get('tpf', 0) * 100) | int }}%</div>
+                    </div>
+                    <div class="factor-row">
+                        <div class="factor-meta">Historical Risk</div>
+                        <div class="factor-bar-container"><div class="factor-bar-fill" style="width: {{ (srs_details.get('hw', 0) * 100) | int }}%;"></div></div>
+                        <div class="small">{{ (srs_details.get('hw', 0) * 100) | int }}%</div>
+                    </div>
+
+                    <div class="small text-muted mt-3">SRS = 0.40xLTR + 0.35xTPF + 0.25xHW</div>
+                </div>
+            </div>
+
+            {% if pending_action %}
+                <div class="agent-recommendation-card mb-3">
+                    <div class="agent-recommendation-header">
+                        <span>&#129302;</span>
+                        <span class="fw-semibold">Agent Recommendation</span>
+                    </div>
+                    <div class="agent-reasoning-text">{{ pending_action.agent_reasoning }}</div>
+                    <div class="px-4 pb-2 small text-muted">
+                        Created {{ pending_action.created_at | relative_time }} | Score {{ ((pending_action.score or 0) * 100) | int }}%
+                    </div>
+                    <div class="agent-recommendation-actions">
+                        <button id="approveActionBtn" data-action-id="{{ pending_action.id }}" class="btn btn-success w-100">&#10003; Approve Restock</button>
+                        <button id="rejectActionBtn" data-action-id="{{ pending_action.id }}" class="btn btn-outline-danger w-100">&#10007; Reject</button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mb-3 border-success">
+                    <div class="card-body text-success fw-semibold">&#9989; No pending actions for this SKU</div>
+                </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-body">
+                    <h6>Configure SKU</h6>
+                    <div class="small text-muted mb-3">
+                        Threshold: {{ item.reorder_threshold }} units<br>
+                        Lead time: {{ item.supplier_lead_time_hours }} hours
+                    </div>
+                    <a href="{{ url_for('inventory.configure', sku_id=item.sku_id) }}" class="btn btn-outline-primary w-100">Configure Alert Thresholds -&gt;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+const velocityChartData = {{ velocity_data | tojson | safe }};
+const stockHistoryData = {{ stock_history | tojson | safe }};
+const srsScore = {{ item.srs_score or 0 }};
+const reorderThreshold = {{ item.reorder_threshold or 0 }};
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/inventory.js') }}" defer></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}Demo Requests{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">Demo Requests</h2>
+                <div class="text-muted small">Lead pipeline for platform demos and onboarding calls</div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a class="badge rounded-pill text-decoration-none {% if status_filter == 'new' %}text-bg-primary{% else %}text-bg-light border text-dark{% endif %}" href="{{ url_for('superadmin.demo_requests', status='new') }}">New {{ summary.new }}</a>
+            <a class="badge rounded-pill text-decoration-none {% if status_filter == 'contacted' %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}" href="{{ url_for('superadmin.demo_requests', status='contacted') }}">Contacted {{ summary.contacted }}</a>
+            <a class="badge rounded-pill text-decoration-none {% if status_filter == 'qualified' %}text-bg-info{% else %}text-bg-light border text-dark{% endif %}" href="{{ url_for('superadmin.demo_requests', status='qualified') }}">Qualified {{ summary.qualified }}</a>
+            <a class="badge rounded-pill text-decoration-none {% if status_filter == 'closed' %}text-bg-secondary{% else %}text-bg-light border text-dark{% endif %}" href="{{ url_for('superadmin.demo_requests', status='closed') }}">Closed {{ summary.closed }}</a>
+            <a class="badge rounded-pill text-decoration-none {% if status_filter == 'all' %}text-bg-dark{% else %}text-bg-light border text-dark{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">All</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Full Name</th>
+                                <th>Company</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Stores</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in pagination.items %}
+                            <tr class="expandable" data-bs-toggle="collapse" data-bs-target="#demo-detail-{{ req.id }}" aria-expanded="false">
+                                <td>{{ req.id }}</td>
+                                <td>{{ req.created_at.strftime('%d %b %Y') if req.created_at else '-' }}</td>
+                                <td>{{ req.full_name }}</td>
+                                <td>{{ req.company_name or '-' }}</td>
+                                <td>{{ req.email }}</td>
+                                <td>{{ req.phone or '-' }}</td>
+                                <td>{{ req.city or '-' }}</td>
+                                <td>{{ req.num_stores or '-' }}</td>
+                                <td>{{ req.role or '-' }}</td>
+                                <td>
+                                    <span id="demo-status-badge-{{ req.id }}" class="badge {% if req.status == 'new' %}text-bg-primary{% elif req.status == 'contacted' %}text-bg-warning{% elif req.status == 'qualified' %}text-bg-info{% else %}text-bg-secondary{% endif %}">
+                                        {{ req.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        {% if req.status == 'new' %}
+                                        <button class="btn btn-outline-primary btn-sm btn-demo-quick-status" type="button" data-req-id="{{ req.id }}" data-status="contacted">Mark Contacted</button>
+                                        {% endif %}
+                                        {% if req.status == 'contacted' %}
+                                        <button class="btn btn-outline-info btn-sm btn-demo-quick-status" type="button" data-req-id="{{ req.id }}" data-status="qualified">Mark Qualified</button>
+                                        {% endif %}
+                                        {% if req.status != 'closed' %}
+                                        <button class="btn btn-outline-secondary btn-sm btn-demo-quick-status" type="button" data-req-id="{{ req.id }}" data-status="closed">Mark Closed</button>
+                                        {% endif %}
+                                        <select class="form-select form-select-sm select-demo-status" data-req-id="{{ req.id }}">
+                                            <option value="new" {% if req.status == 'new' %}selected{% endif %}>New</option>
+                                            <option value="contacted" {% if req.status == 'contacted' %}selected{% endif %}>Contacted</option>
+                                            <option value="qualified" {% if req.status == 'qualified' %}selected{% endif %}>Qualified</option>
+                                            <option value="closed" {% if req.status == 'closed' %}selected{% endif %}>Closed</option>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="demo-detail-{{ req.id }}">
+                                <td colspan="11" class="bg-light">
+                                    <div class="small">
+                                        <div><strong>Message:</strong> {{ req.message or 'No message provided.' }}</div>
+                                        <div class="mt-1"><strong>Contact:</strong> {{ req.email }}{% if req.phone %} | {{ req.phone }}{% endif %}</div>
+                                        <div class="mt-1"><a href="mailto:{{ req.email }}?subject=RetailMind Demo - Following Up">Send Email</a></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="11" class="text-muted">No demo requests found for current filter.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ render_pagination(pagination) }}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+    <script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

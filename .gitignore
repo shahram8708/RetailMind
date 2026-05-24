@@ -1,0 +1,62 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.eggs/
+*.egg-info/
+build/
+dist/
+site/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Flask / app runtime files
+instance/*.db
+instance/*.sqlite
+instance/*.sqlite3
+instance/*.db-journal
+instance/*.log
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Local tooling and IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test and coverage artifacts
+.cache/
+coverage.xml
+
+# Packaging / dependency managers
+pip-wheel-metadata/
+Pipfile.lock
+poetry.lock
+poetry.toml
+
+# OS and browser junk
+*.bak
+*.orig

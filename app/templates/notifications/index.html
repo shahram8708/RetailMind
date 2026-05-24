@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h2 class="mb-0">Notification Center</h2>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary btn-sm" id="mark-all-read-btn">Mark All Read</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Clear Read</button>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <span class="badge bg-primary-subtle text-primary" id="notification-unread-count">{{ unread_count }} unread notifications</span>
+    </div>
+
+    <ul class="nav nav-tabs filter-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if not filter_type %}active{% endif %}" data-filter="all" href="{{ url_for('notifications.index') }}">All</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if filter_type == 'inventory_alert' %}active{% endif %}" data-filter="inventory_alert" href="{{ url_for('notifications.index', type='inventory_alert') }}">Inventory Alerts</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if filter_type == 'campaign_opportunity' %}active{% endif %}" data-filter="campaign_opportunity" href="{{ url_for('notifications.index', type='campaign_opportunity') }}">Campaign</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if filter_type == 'facility_alert' %}active{% endif %}" data-filter="facility_alert" href="{{ url_for('notifications.index', type='facility_alert') }}">Facility</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if filter_type == 'agent_action' %}active{% endif %}" data-filter="agent_action" href="{{ url_for('notifications.index', type='agent_action') }}">Agent Actions</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if filter_type == 'system' %}active{% endif %}" data-filter="system" href="{{ url_for('notifications.index', type='system') }}">System</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link notif-filter-tab {% if filter_type == 'billing' %}active{% endif %}" data-filter="billing" href="{{ url_for('notifications.index', type='billing') }}">Billing</a></li>
+    </ul>
+
+    {% if notifications.items %}
+        <div class="d-flex flex-column gap-2" id="notifications-list">
+            {% for notification in notifications.items %}
+                {% set type_icon = {
+                    'inventory_alert': '📦',
+                    'campaign_opportunity': '📣',
+                    'facility_alert': '🔧',
+                    'agent_action': '🛍️',
+                    'system': '⚙️',
+                    'billing': '💳'
+                }.get(notification.notification_type, '⚙️') %}
+
+                <div class="notif-row {% if notification.is_read %}read{% else %}unread{% endif %}" data-notif-id="{{ notification.id }}" data-type="{{ notification.notification_type }}" data-is-read="{{ 'true' if notification.is_read else 'false' }}" data-action-url="{{ notification.action_url or '' }}">
+                    <div class="notif-severity-icon-col">
+                        <span class="severity-dot {% if notification.severity == 'critical' %}critical{% elif notification.severity == 'warning' %}warning{% else %}info{% endif %}"></span>
+                    </div>
+                    <div class="notif-type-icon">{{ type_icon }}</div>
+                    <div class="flex-grow-1">
+                        <a href="{{ notification.action_url or '#' }}" class="notif-title-link {% if not notification.is_read %}fw-semibold{% endif %}" data-notif-id="{{ notification.id }}">{{ notification.title }}</a>
+                        <div class="text-muted small mt-1">{{ notification.message }}</div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="notif-severity-badge badge bg-light text-dark border">{{ notification.severity }}</span>
+                            <span class="notif-severity-badge badge bg-light text-dark border">{{ notification.notification_type }}</span>
+                        </div>
+                    </div>
+                    <div class="notif-right-meta text-end">
+                        <div class="text-muted small mb-2">{{ notification.created_at | relative_time }}</div>
+                        <div class="d-flex justify-content-end align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger notif-delete-btn" data-notif-id="{{ notification.id }}">X</button>
+                            {% if notification.action_url %}
+                                <a href="{{ notification.action_url }}" class="text-decoration-none">-></a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {{ render_pagination(notifications) }}
+    {% else %}
+        <div class="card p-5 text-center">
+            <div class="fs-2 mb-2">🔔</div>
+            <h5>All caught up!</h5>
+            <p class="text-muted mb-0">No notifications yet. Your agents will alert you here when they find important events.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+{% endif %}
+{% endblock %}

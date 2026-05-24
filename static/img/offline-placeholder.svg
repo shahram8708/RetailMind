@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <rect width="640" height="480" fill="#E5E7EB"/>
+  <circle cx="320" cy="190" r="64" fill="#CBD5F5"/>
+  <rect x="160" y="280" width="320" height="22" rx="11" fill="#CBD5F5"/>
+  <rect x="200" y="320" width="240" height="18" rx="9" fill="#E2E8F0"/>
+  <text x="320" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#1F2937">Offline</text>
+</svg>

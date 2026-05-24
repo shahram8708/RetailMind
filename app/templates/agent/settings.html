@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Configuration{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page page-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-0">&#9881;&#65039; Agent Configuration</h2>
+            <div class="text-muted small">Tune mission controls, thresholds, and autonomous behavior</div>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" form="agentSettingsForm" class="btn btn-primary">Save Changes</button>
+            <button type="button" id="resetSettingsBtn" class="btn btn-outline-danger">Reset to Defaults</button>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('agent.settings') }}" id="agentSettingsForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="settings-section-card mb-4">
+            <h5 class="mb-3">Active Agent Missions</h5>
+            <div class="mission-toggle-grid">
+                <div class="mission-toggle-item">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="inventory_mission_enabled" name="inventory_mission_enabled" {% if agent_config.inventory_mission_enabled %}checked{% endif %}>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Inventory Mission</div>
+                        <div class="small text-muted">Monitors SKU stockout risk and restock actions</div>
+                        <div class="small {% if agent_config.inventory_mission_enabled %}text-success{% else %}text-muted{% endif %}">{% if agent_config.inventory_mission_enabled %}Running{% else %}Paused{% endif %}</div>
+                    </div>
+                </div>
+
+                <div class="mission-toggle-item">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="campaign_mission_enabled" name="campaign_mission_enabled" {% if agent_config.campaign_mission_enabled %}checked{% endif %}>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Campaign Mission</div>
+                        <div class="small text-muted">Finds campaign opportunities and activation windows</div>
+                        <div class="small {% if agent_config.campaign_mission_enabled %}text-success{% else %}text-muted{% endif %}">{% if agent_config.campaign_mission_enabled %}Running{% else %}Paused{% endif %}</div>
+                    </div>
+                </div>
+
+                <div class="mission-toggle-item">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="facility_mission_enabled" name="facility_mission_enabled" {% if agent_config.facility_mission_enabled %}checked{% endif %}>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Facility Mission</div>
+                        <div class="small text-muted">Computes FPS and predicts maintenance risk</div>
+                        <div class="small {% if agent_config.facility_mission_enabled %}text-success{% else %}text-muted{% endif %}">{% if agent_config.facility_mission_enabled %}Running{% else %}Paused{% endif %}</div>
+                    </div>
+                </div>
+
+                <div class="mission-toggle-item">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="shopper_mission_enabled" name="shopper_mission_enabled" {% if agent_config.shopper_mission_enabled %}checked{% endif %}>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Shopper Agent - Coming in Step 5</div>
+                        <div class="small text-muted">Reserved mission controls for shopper insights</div>
+                        <div class="small {% if agent_config.shopper_mission_enabled %}text-success{% else %}text-muted{% endif %}">{% if agent_config.shopper_mission_enabled %}Running{% else %}Paused{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section-card mb-4">
+            <h5 class="mb-3">Risk Score Thresholds</h5>
+
+            <div class="threshold-slider-container mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0" for="inventory_srs_threshold">Inventory SRS Threshold</label>
+                    <span class="threshold-value-badge" data-badge-for="inventory_srs_threshold">{{ '%.2f'|format(agent_config.inventory_srs_threshold or 0.70) }}</span>
+                </div>
+                <input type="range" class="form-range threshold-slider" id="inventory_srs_threshold" name="inventory_srs_threshold" min="0.50" max="0.95" step="0.01" value="{{ '%.2f'|format(agent_config.inventory_srs_threshold or 0.70) }}">
+            </div>
+
+            <div class="threshold-slider-container mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0" for="campaign_cos_threshold">Campaign COS Threshold</label>
+                    <span class="threshold-value-badge" data-badge-for="campaign_cos_threshold">{{ '%.2f'|format(agent_config.campaign_cos_threshold or 0.75) }}</span>
+                </div>
+                <input type="range" class="form-range threshold-slider" id="campaign_cos_threshold" name="campaign_cos_threshold" min="0.50" max="0.95" step="0.01" value="{{ '%.2f'|format(agent_config.campaign_cos_threshold or 0.75) }}">
+            </div>
+
+            <div class="threshold-slider-container mb-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0" for="facility_fps_threshold">Facility FPS Threshold</label>
+                    <span class="threshold-value-badge" data-badge-for="facility_fps_threshold">{{ '%.2f'|format(agent_config.facility_fps_threshold or 0.65) }}</span>
+                </div>
+                <input type="range" class="form-range threshold-slider" id="facility_fps_threshold" name="facility_fps_threshold" min="0.50" max="0.95" step="0.01" value="{{ '%.2f'|format(agent_config.facility_fps_threshold or 0.65) }}">
+            </div>
+        </div>
+
+        <div class="settings-section-card mb-4">
+            <h5 class="mb-3">Autonomous Action Settings</h5>
+            <div class="alert alert-warning py-2 mb-3">&#9888;&#65039; When enabled, agents take action without your review. All actions are logged in the Agent Audit Log.</div>
+
+            <div class="mission-toggle-item mb-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input auto-approval-toggle" type="checkbox" id="auto_approve_restock" name="auto_approve_restock" {% if agent_config.auto_approve_restock %}checked{% endif %}>
+                </div>
+                <div>
+                    <div class="fw-semibold">Auto Approve Restock Requests</div>
+                    <div class="small text-muted">Immediately executes high confidence inventory actions</div>
+                    <div class="auto-approval-warning {% if agent_config.auto_approve_restock %}visible{% endif %}">Agent will send restock orders without human approval.</div>
+                </div>
+            </div>
+
+            <div class="mission-toggle-item mb-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input auto-approval-toggle" type="checkbox" id="auto_approve_campaigns" name="auto_approve_campaigns" {% if agent_config.auto_approve_campaigns %}checked{% endif %}>
+                </div>
+                <div>
+                    <div class="fw-semibold">Auto Approve Campaign Activations</div>
+                    <div class="small text-muted">Launches high score campaign opportunities automatically</div>
+                    <div class="auto-approval-warning {% if agent_config.auto_approve_campaigns %}visible{% endif %}">Agent will activate campaigns without human approval.</div>
+                </div>
+            </div>
+
+            <div class="mission-toggle-item mb-0">
+                <div class="form-check form-switch">
+                    <input class="form-check-input auto-approval-toggle" type="checkbox" id="auto_approve_maintenance" name="auto_approve_maintenance" {% if agent_config.auto_approve_maintenance %}checked{% endif %}>
+                </div>
+                <div>
+                    <div class="fw-semibold">Auto Approve Maintenance Work Orders</div>
+                    <div class="small text-muted">Creates work orders directly for critical facility anomalies</div>
+                    <div class="auto-approval-warning {% if agent_config.auto_approve_maintenance %}visible{% endif %}">Agent will create work orders without human approval.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section-card mb-4">
+            <h5 class="mb-3">Check Frequency</h5>
+            <div class="row g-3">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="inventory_check_interval_minutes">Inventory</label>
+                    <input type="number" class="form-control" id="inventory_check_interval_minutes" name="inventory_check_interval_minutes" min="5" max="60" step="5" value="{{ agent_config.inventory_check_interval_minutes or 15 }}">
+                    <div class="small text-muted mt-1">{{ agent_config.inventory_check_interval_minutes or 15 }} minutes between checks</div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="campaign_check_interval_minutes">Campaign</label>
+                    <input type="number" class="form-control" id="campaign_check_interval_minutes" name="campaign_check_interval_minutes" min="15" max="120" step="15" value="{{ agent_config.campaign_check_interval_minutes or 30 }}">
+                    <div class="small text-muted mt-1">{{ agent_config.campaign_check_interval_minutes or 30 }} minutes between checks</div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="facility_check_interval_minutes">Facility</label>
+                    <input type="number" class="form-control" id="facility_check_interval_minutes" name="facility_check_interval_minutes" min="5" max="30" step="5" value="{{ agent_config.facility_check_interval_minutes or 10 }}">
+                    <div class="small text-muted mt-1">{{ agent_config.facility_check_interval_minutes or 10 }} minutes between checks</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section-card mb-4">
+            <h5 class="mb-3">Notification Settings</h5>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label" for="notification_email">Notification Email</label>
+                    <input type="email" class="form-control" id="notification_email" name="notification_email" value="{{ agent_config.notification_email or '' }}" placeholder="alerts@yourmall.com">
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-outline-primary w-100" id="testAlertBtn">Send Test Alert</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section-card">
+            <div class="small text-muted">
+                Last Updated: {{ agent_config.updated_at | relative_time }}
+                |
+                Configuration belongs to: {{ property.name if property else 'Unknown Property' }}
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/agent.js') }}" defer></script>
+{% endif %}
+{% endblock %}

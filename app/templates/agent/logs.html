@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}Agent Audit Log{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page page-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-0">&#129302; Agent Audit Log</h2>
+            <div class="text-muted small">Detailed mission history and approval trail</div>
+        </div>
+        <a
+            class="btn btn-outline-primary"
+            href="{{ url_for('agent.export_logs', mission_type=filters.mission_type, status=filters.status, date_from=filters.date_from, date_to=filters.date_to, score_min=filters.score_min) }}"
+        >Download Full Log (CSV)</a>
+    </div>
+
+    <div class="roi-card-grid mb-4">
+        <div class="roi-card" style="border-left-color: var(--color-blue);">
+            <div class="roi-label">Total Actions (This Month)</div>
+            <div class="roi-value">{{ total_actions_month }}</div>
+        </div>
+        <div class="roi-card" style="border-left-color: {% if approval_rate > 80 %}var(--color-green){% elif approval_rate >= 60 %}var(--color-orange){% else %}var(--color-red){% endif %};">
+            <div class="roi-label">Approval Rate</div>
+            <div class="roi-value">{{ '%.0f'|format(approval_rate) }}%</div>
+        </div>
+        <div class="roi-card" style="border-left-color: var(--color-teal);">
+            <div class="roi-label">Avg Resolution Time</div>
+            <div class="roi-value">{{ '%.1f'|format(avg_resolution_hours) }}h</div>
+        </div>
+        <div class="roi-card" style="border-left-color: var(--color-cyan);">
+            <div class="roi-label">Auto Executed Actions</div>
+            <div class="roi-value">{{ auto_executed_count }}</div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('agent.logs') }}" class="row g-3 align-items-end">
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small">Mission Type</label>
+                    <select name="mission_type" class="form-select form-select-sm">
+                        <option value="all" {% if filters.mission_type == 'all' %}selected{% endif %}>All</option>
+                        <option value="inventory" {% if filters.mission_type == 'inventory' %}selected{% endif %}>Inventory</option>
+                        <option value="campaign" {% if filters.mission_type == 'campaign' %}selected{% endif %}>Campaign</option>
+                        <option value="facility" {% if filters.mission_type == 'facility' %}selected{% endif %}>Facility</option>
+                        <option value="shopper" {% if filters.mission_type == 'shopper' %}selected{% endif %}>Shopper</option>
+                        <option value="system" {% if filters.mission_type == 'system' %}selected{% endif %}>System</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All</option>
+                        <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if filters.status == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="auto_executed" {% if filters.status == 'auto_executed' %}selected{% endif %}>Auto Executed</option>
+                        <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Failed</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small">Date From</label>
+                    <input type="date" class="form-control form-control-sm" name="date_from" value="{{ filters.date_from }}">
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small">Date To</label>
+                    <input type="date" class="form-control form-control-sm" name="date_to" value="{{ filters.date_to }}">
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small">Min Score: <span id="scoreMinValue">{{ '%.2f'|format(filters.score_min or 0) }}</span></label>
+                    <input type="range" class="form-range" id="scoreMinSlider" name="score_min" min="0" max="1" step="0.01" value="{{ filters.score_min or 0 }}">
+                </div>
+
+                <div class="col-lg-2 col-md-8 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Apply Filters</button>
+                    <a href="{{ url_for('agent.logs') }}" class="btn btn-outline-secondary btn-sm w-100">Reset All</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            {% if pagination.items %}
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>Mission</th>
+                                <th>Action Type</th>
+                                <th>Description</th>
+                                <th>Score</th>
+                                <th>Status</th>
+                                <th>Resolved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in pagination.items %}
+                                {% set mission_class = action.mission_type if action.mission_type in ['inventory', 'campaign', 'facility', 'shopper', 'system'] else 'system' %}
+                                <tr
+                                    class="log-row expandable"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#log-detail-{{ action.id }}"
+                                    aria-expanded="false"
+                                >
+                                    <td><span class="monospace-small">#{{ action.id }}</span></td>
+                                    <td>
+                                        <span
+                                            data-bs-toggle="tooltip"
+                                            data-bs-title="{{ action.created_at.strftime('%Y-%m-%d %H:%M UTC') if action.created_at else '' }}"
+                                        >{{ action.created_at | relative_time }}</span>
+                                    </td>
+                                    <td><span class="mission-badge {{ mission_class }}">{{ action.mission_type | title }}</span></td>
+                                    <td>{{ action.action_type | replace('_', ' ') | title }}</td>
+                                    <td>
+                                        {{ action.description | truncate(80) }}
+                                        <div class="small text-muted">{{ action.entity_id or '-' }}</div>
+                                    </td>
+                                    <td>
+                                        {% if action.score is not none %}
+                                            {% set score_val = action.score %}
+                                            <span class="badge {% if score_val > 0.85 %}bg-danger{% elif score_val >= 0.70 %}bg-warning text-dark{% elif score_val >= 0.50 %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ action.score | round(2) }}</span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if action.status == 'pending' %}bg-primary{% elif action.status == 'approved' %}bg-success{% elif action.status == 'rejected' %}bg-danger{% elif action.status == 'auto_executed' %}bg-info{% else %}bg-secondary{% endif %}">
+                                            {{ action.status | replace('_', ' ') | title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ action.resolved_at | relative_time if action.resolved_at else '-' }}</td>
+                                </tr>
+                                <tr class="collapse" id="log-detail-{{ action.id }}">
+                                    <td colspan="8" class="p-0">
+                                        <div class="log-expand-panel">
+                                            <div class="fw-semibold mb-2">Agent Reasoning</div>
+                                            <div class="reasoning-text">{{ action.agent_reasoning or 'No detailed reasoning captured for this action.' }}</div>
+                                            <div class="small text-muted mt-3">
+                                                Approved By: {{ action.approved_by.full_name if action.approved_by else 'N/A' }}
+                                                |
+                                                Created: {{ action.created_at.strftime('%Y-%m-%d %H:%M UTC') if action.created_at else '-' }}
+                                                |
+                                                Resolved: {{ action.resolved_at.strftime('%Y-%m-%d %H:%M UTC') if action.resolved_at else '-' }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {{ render_pagination(pagination) }}
+            {% else %}
+                <div class="p-4 text-muted">No agent actions match your filters.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/agent.js') }}" defer></script>
+{% endif %}
+{% endblock %}

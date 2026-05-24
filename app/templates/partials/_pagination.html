@@ -1,0 +1,44 @@
+{% macro page_url(page_number) %}
+    {% set params = request.args.to_dict() %}
+    {% set _ = params.update({'page': page_number}) %}
+    {{ url_for(request.endpoint, **params) }}
+{% endmacro %}
+
+{% macro render_pagination(pagination) %}
+    {% if pagination and pagination.pages > 1 %}
+        {% set start_page = [pagination.page - 2, 1] | max %}
+        {% set end_page = [pagination.page + 2, pagination.pages] | min %}
+
+        <nav aria-label="Pagination">
+            <ul class="pagination justify-content-center mt-4">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ page_url(pagination.prev_num if pagination.has_prev else pagination.page) }}">Previous</a>
+                </li>
+
+                {% if start_page > 1 %}
+                    <li class="page-item"><a class="page-link" href="{{ page_url(1) }}">1</a></li>
+                    {% if start_page > 2 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endif %}
+
+                {% for page_number in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if page_number == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ page_url(page_number) }}">{{ page_number }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if end_page < pagination.pages %}
+                    {% if end_page < pagination.pages - 1 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    <li class="page-item"><a class="page-link" href="{{ page_url(pagination.pages) }}">{{ pagination.pages }}</a></li>
+                {% endif %}
+
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ page_url(pagination.next_num if pagination.has_next else pagination.page) }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+{% endmacro %}

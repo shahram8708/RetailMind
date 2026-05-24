@@ -1,0 +1,62 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block step_content %}
+<div class="row g-3">
+    <div class="col-md-6">
+        <label for="{{ form.mall_name.id }}" class="form-label">{{ form.mall_name.label.text }}</label>
+        {{ form.mall_name(class='form-control' + (' is-invalid' if form.mall_name.errors else ''), placeholder='e.g. Phoenix Marketcity, Lulu Mall, Select CityWalk') }}
+        {% for error in form.mall_name.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-6">
+        <label for="{{ form.city.id }}" class="form-label">{{ form.city.label.text }}</label>
+        {{ form.city(class='form-select' + (' is-invalid' if form.city.errors else '')) }}
+        {% for error in form.city.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-12">
+        <label for="{{ form.full_address.id }}" class="form-label">{{ form.full_address.label.text }}</label>
+        {{ form.full_address(class='form-control' + (' is-invalid' if form.full_address.errors else ''), placeholder='Street address, area, landmark') }}
+        {% for error in form.full_address.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-4">
+        <label for="{{ form.country.id }}" class="form-label">{{ form.country.label.text }}</label>
+        {{ form.country(class='form-control', readonly=True, value='India') }}
+    </div>
+
+    <div class="col-md-4">
+        <label for="{{ form.total_area_sqft.id }}" class="form-label">{{ form.total_area_sqft.label.text }}</label>
+        {{ form.total_area_sqft(class='form-control' + (' is-invalid' if form.total_area_sqft.errors else ''), placeholder='e.g. 500000') }}
+        {% for error in form.total_area_sqft.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-4">
+        <label for="{{ form.num_floors.id }}" class="form-label">{{ form.num_floors.label.text }}</label>
+        {{ form.num_floors(class='form-control' + (' is-invalid' if form.num_floors.errors else ''), min='1', max='20') }}
+        {% for error in form.num_floors.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-6">
+        <label for="{{ form.num_tenants_approx.id }}" class="form-label">{{ form.num_tenants_approx.label.text }}</label>
+        {{ form.num_tenants_approx(class='form-control' + (' is-invalid' if form.num_tenants_approx.errors else ''), placeholder='e.g. 120') }}
+        {% for error in form.num_tenants_approx.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="alert alert-info mt-4 mb-0" role="alert">
+    This information helps RetailMind calibrate foot traffic models and agent missions for your specific property scale.
+</div>
+{% endblock %}

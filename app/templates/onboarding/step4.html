@@ -1,0 +1,188 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block step_content %}
+<h5 class="mb-3">Agent Decision Thresholds</h5>
+
+<div class="threshold-slider-wrapper mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <label class="form-label mb-0" for="inventory_srs_threshold">
+            Inventory SRS Threshold
+            <button type="button" class="btn btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-trigger="focus" title="Inventory SRS Threshold" data-bs-content="The agent creates a restock alert when a SKU's Stockout Risk Score exceeds this value. Lower means more alerts, higher means only critical situations.">i</button>
+        </label>
+        <span class="threshold-value-badge" id="badge-inventory_srs_threshold">{{ '%.2f'|format(form.inventory_srs_threshold.data or 0.70) }}</span>
+    </div>
+    <input
+        type="range"
+        class="form-range threshold-slider"
+        id="inventory_srs_threshold"
+        name="{{ form.inventory_srs_threshold.name }}"
+        min="0.50"
+        max="0.95"
+        step="0.01"
+        value="{{ '%.2f'|format(form.inventory_srs_threshold.data or 0.70) }}"
+    >
+    <div class="d-flex justify-content-between small text-muted">
+        <span>Lenient (more alerts)</span>
+        <span>Strict (fewer alerts)</span>
+    </div>
+    {% for error in form.inventory_srs_threshold.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="threshold-slider-wrapper mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <label class="form-label mb-0" for="campaign_cos_threshold">
+            Campaign COS Threshold
+            <button type="button" class="btn btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-trigger="focus" title="Campaign COS Threshold" data-bs-content="The agent suggests a campaign when Opportunity Score exceeds this. Lower means more suggestions, higher means only high confidence opportunities.">i</button>
+        </label>
+        <span class="threshold-value-badge" id="badge-campaign_cos_threshold">{{ '%.2f'|format(form.campaign_cos_threshold.data or 0.75) }}</span>
+    </div>
+    <input
+        type="range"
+        class="form-range threshold-slider"
+        id="campaign_cos_threshold"
+        name="{{ form.campaign_cos_threshold.name }}"
+        min="0.50"
+        max="0.95"
+        step="0.01"
+        value="{{ '%.2f'|format(form.campaign_cos_threshold.data or 0.75) }}"
+    >
+    <div class="d-flex justify-content-between small text-muted">
+        <span>Lenient (more alerts)</span>
+        <span>Strict (fewer alerts)</span>
+    </div>
+    {% for error in form.campaign_cos_threshold.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="threshold-slider-wrapper mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <label class="form-label mb-0" for="facility_fps_threshold">
+            Facility FPS Threshold
+            <button type="button" class="btn btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-trigger="focus" title="Facility FPS Threshold" data-bs-content="The agent creates a maintenance alert when Failure Probability Score exceeds this. Lower means more preventive actions, higher means only high risk situations.">i</button>
+        </label>
+        <span class="threshold-value-badge" id="badge-facility_fps_threshold">{{ '%.2f'|format(form.facility_fps_threshold.data or 0.65) }}</span>
+    </div>
+    <input
+        type="range"
+        class="form-range threshold-slider"
+        id="facility_fps_threshold"
+        name="{{ form.facility_fps_threshold.name }}"
+        min="0.50"
+        max="0.95"
+        step="0.01"
+        value="{{ '%.2f'|format(form.facility_fps_threshold.data or 0.65) }}"
+    >
+    <div class="d-flex justify-content-between small text-muted">
+        <span>Lenient (more alerts)</span>
+        <span>Strict (fewer alerts)</span>
+    </div>
+    {% for error in form.facility_fps_threshold.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<h5 class="mb-3 mt-4">Autonomous Action Settings</h5>
+<div class="alert alert-warning">
+    Enabling auto approval means agents will take action without your review. Monitor Agent Logs regularly.
+</div>
+
+<div class="form-check form-switch mb-2">
+    {{ form.auto_approve_restock(class='form-check-input auto-toggle', id='auto-approve-restock', data_warning_target='restock-warning') }}
+    <label class="form-check-label" for="auto-approve-restock">{{ form.auto_approve_restock.label.text }}</label>
+</div>
+<div id="restock-warning" class="small text-warning mb-3 {% if not form.auto_approve_restock.data %}d-none{% endif %}">
+    Agent will automatically send restock orders without your approval.
+</div>
+
+<div class="form-check form-switch mb-2">
+    {{ form.auto_approve_campaigns(class='form-check-input auto-toggle', id='auto-approve-campaigns', data_warning_target='campaign-warning') }}
+    <label class="form-check-label" for="auto-approve-campaigns">{{ form.auto_approve_campaigns.label.text }}</label>
+</div>
+<div id="campaign-warning" class="small text-warning mb-3 {% if not form.auto_approve_campaigns.data %}d-none{% endif %}">
+    Agent will automatically activate campaigns without your approval.
+</div>
+
+<div class="form-check form-switch mb-2">
+    {{ form.auto_approve_maintenance(class='form-check-input auto-toggle', id='auto-approve-maintenance', data_warning_target='maintenance-warning') }}
+    <label class="form-check-label" for="auto-approve-maintenance">{{ form.auto_approve_maintenance.label.text }}</label>
+</div>
+<div id="maintenance-warning" class="small text-warning mb-4 {% if not form.auto_approve_maintenance.data %}d-none{% endif %}">
+    Agent will automatically create work orders without your approval.
+</div>
+
+<h5 class="mb-3 mt-4">Monitoring Frequency</h5>
+<div class="row g-3">
+    <div class="col-lg-4 col-md-6">
+        <label class="form-label" for="{{ form.inventory_check_interval_minutes.id }}">Inventory Check (minutes)</label>
+        {{ form.inventory_check_interval_minutes(class='form-control', min='5', max='60') }}
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <label class="form-label" for="{{ form.campaign_check_interval_minutes.id }}">Campaign Check (minutes)</label>
+        {{ form.campaign_check_interval_minutes(class='form-control', min='15', max='120') }}
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <label class="form-label" for="{{ form.facility_check_interval_minutes.id }}">Facility Check (minutes)</label>
+        {{ form.facility_check_interval_minutes(class='form-control', min='5', max='30') }}
+    </div>
+</div>
+
+<div class="mt-3">
+    <label class="form-label" for="{{ form.notification_email.id }}">{{ form.notification_email.label.text }}</label>
+    {{ form.notification_email(class='form-control', placeholder='alerts@yourmall.com') }}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        popoverTriggerList.forEach(function (element) {
+            new bootstrap.Popover(element);
+        });
+
+        function updateThresholdBadge(slider) {
+            const badge = document.getElementById(`badge-${slider.id}`);
+            if (!badge) {
+                return;
+            }
+
+            const value = Number(slider.value || 0);
+            badge.textContent = value.toFixed(2);
+            badge.classList.remove('lenient', 'balanced', 'strict');
+
+            if (value < 0.60) {
+                badge.classList.add('lenient');
+            } else if (value <= 0.75) {
+                badge.classList.add('balanced');
+            } else {
+                badge.classList.add('strict');
+            }
+        }
+
+        document.querySelectorAll('.threshold-slider').forEach((slider) => {
+            slider.addEventListener('input', function () {
+                updateThresholdBadge(slider);
+            });
+            updateThresholdBadge(slider);
+        });
+
+        document.querySelectorAll('.auto-toggle').forEach((toggle) => {
+            const targetId = toggle.getAttribute('data-warning-target');
+            const warning = document.getElementById(targetId);
+
+            function syncWarning() {
+                if (warning) {
+                    warning.classList.toggle('d-none', !toggle.checked);
+                }
+            }
+
+            toggle.addEventListener('change', syncWarning);
+            syncWarning();
+        });
+    });
+</script>
+{% endblock %}

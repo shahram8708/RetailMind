@@ -1,0 +1,26 @@
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid px-3 px-lg-4">
+        <a class="navbar-brand" href="{{ url_for('public.index') }}">
+            RetailMind <span class="brand-dot"></span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#retailmindPublicNav" aria-controls="retailmindPublicNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="retailmindPublicNav">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link {% if request.endpoint == 'public.index' %}active{% endif %}" href="{{ url_for('public.index') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.endpoint == 'public.features' %}active{% endif %}" href="{{ url_for('public.features') }}">Features</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.endpoint == 'public.pricing' %}active{% endif %}" href="{{ url_for('public.pricing') }}">Pricing</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.endpoint == 'public.about' %}active{% endif %}" href="{{ url_for('public.about') }}">About</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.endpoint == 'public.demo' %}active{% endif %}" href="{{ url_for('public.demo') }}">Book Demo</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2 ms-lg-3">
+                <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.login') }}">Log In</a>
+                <a class="btn btn-sm btn-primary" href="{{ url_for('auth.register') }}">Get Started</a>
+            </div>
+        </div>
+    </div>
+</nav>

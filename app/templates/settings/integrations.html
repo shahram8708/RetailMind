@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Integrations{% endblock %}
+
+{% block content %}
+<div class="page-container settings-page">
+    <div class="settings-layout">
+        <aside class="settings-sidebar card p-3">
+            <div class="small text-uppercase text-muted mb-2">Settings</div>
+            <nav class="nav flex-column gap-1">
+                <a class="settings-link {% if request.endpoint == 'settings.profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">👤 My Account</a>
+                {% if current_user.role in ['mall_admin', 'superadmin'] %}
+                <a class="settings-link {% if request.endpoint == 'settings.team' %}active{% endif %}" href="{{ url_for('settings.team') }}">👥 Team Members</a>
+                <a class="settings-link {% if request.endpoint == 'settings.billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">💳 Billing & Subscription</a>
+                {% endif %}
+                <a class="settings-link {% if request.endpoint == 'settings.integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">🔌 Data Integrations</a>
+                <hr>
+                <a class="settings-link" href="{{ url_for('agent.settings') }}">🤖 Agent Configuration</a>
+                <a class="settings-link" href="{{ url_for('agent.logs') }}">📋 Agent Logs</a>
+            </nav>
+        </aside>
+
+        <section class="settings-main">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Integration Connections</h4>
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('onboarding.step2') }}">← Back to Full Configuration</a>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="card h-100 integration-card" data-integration="pos">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">💳 Point of Sale System</h6>
+                                <span class="status-dot {{ statuses.pos }}" id="status-dot-pos"></span>
+                            </div>
+                            <p class="small text-muted">Connect your POS to feed real time sales data into the Inventory Watch Engine.</p>
+                            <div class="small mb-2">Using: <strong>{{ config.get('pos_system', 'none')|replace('_', ' ')|title }}</strong></div>
+                            <div class="small mb-2"><a href="{{ url_for('onboarding.step2') }}">Configure →</a></div>
+                            <p>
+                                <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="pos" data-test-url="{{ url_for('settings.test_integration', integration_type='pos') }}" type="button">Test Connection</button>
+                                <span class="small ms-2 test-result" id="test-result-pos"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100 integration-card" data-integration="inventory">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">📦 Inventory Management</h6>
+                                <span class="status-dot {{ statuses.inventory }}" id="status-dot-inventory"></span>
+                            </div>
+                            <p class="small text-muted">Sync inventory levels for real time SRS computation.</p>
+                            <div class="small mb-2">Using: <strong>{{ config.get('inventory_system', 'none')|replace('_', ' ')|title }}</strong></div>
+                            <p>
+                                <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="inventory" data-test-url="{{ url_for('settings.test_integration', integration_type='inventory') }}" type="button">Test Connection</button>
+                                <span class="small ms-2 test-result" id="test-result-inventory"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100 integration-card" data-integration="crm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">👥 Customer Relationship Management</h6>
+                                <span class="status-dot {{ statuses.crm }}" id="status-dot-crm"></span>
+                            </div>
+                            <p class="small text-muted">Connect CRM for loyalty based campaign scoring Phase 2 feature.</p>
+                            <div class="small mb-2">Using: <strong>{{ config.get('crm_system', 'none')|replace('_', ' ')|title }}</strong></div>
+                            <span class="badge text-bg-warning mb-2">Phase 2 Feature — Enhances Campaign Opportunity Score</span>
+                            <p>
+                                <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="crm" data-test-url="{{ url_for('settings.test_integration', integration_type='crm') }}" type="button">Test Connection</button>
+                                <span class="small ms-2 test-result" id="test-result-crm"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100 integration-card" data-integration="sensor">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">📡 Sensor / IoT Data Source</h6>
+                                <span class="status-dot {{ statuses.sensor }}" id="status-dot-sensor"></span>
+                            </div>
+                            <p class="small text-muted">Real equipment sensors for Facility Intelligence Engine.</p>
+                            {% if config.get('sensor_source') == 'simulator' %}
+                            <div class="small text-success mb-2">Simulator Active — Generating realistic data every 5 minutes.</div>
+                            {% else %}
+                            <div class="small mb-2">Endpoint: <strong>{{ config.get('sensor_api_endpoint') or 'Not configured' }}</strong></div>
+                            {% endif %}
+                            <p>
+                                <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="sensor" data-test-url="{{ url_for('settings.test_integration', integration_type='sensor') }}" type="button">Test Connection</button>
+                                <span class="small ms-2 test-result" id="test-result-sensor"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100 integration-card" data-integration="weather">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">🌤️ Weather Intelligence</h6>
+                                <span class="status-dot {{ statuses.weather }}" id="status-dot-weather"></span>
+                            </div>
+                            <p class="small text-muted">Real time weather data for Campaign Opportunity Score via Google Gemini.</p>
+                            {% if gemini_enabled %}
+                            <div class="small text-success mb-2">Active — Powered by Google Gemini web search grounding.</div>
+                            {% else %}
+                            <div class="small text-warning mb-2">Inactive — Configure GEMINI_API_KEY in .env to enable.</div>
+                            {% endif %}
+                            <p>
+                                <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="weather" data-test-url="{{ url_for('settings.test_integration', integration_type='weather') }}" type="button">Test Connection</button>
+                                <span class="small ms-2 test-result" id="test-result-weather"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100 integration-card" data-integration="elasticsearch">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">🔍 Elasticsearch Search Engine</h6>
+                                <span class="status-dot {{ statuses.elasticsearch }}" id="status-dot-elasticsearch"></span>
+                            </div>
+                            <p class="small text-muted">Powers advanced product search and analytics. Optional for MVP. SQLite used as fallback.</p>
+                            {% if es_enabled %}
+                            <div class="small mb-2">Cloud ID: <code>{{ (es_cloud_id or '')[:20] }}...</code></div>
+                            {% else %}
+                            <div class="small text-warning mb-2">Elasticsearch not configured.</div>
+                            {% endif %}
+                            <p>
+                                <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="elasticsearch" data-test-url="{{ url_for('settings.test_integration', integration_type='elasticsearch') }}" type="button">Test Connection</button>
+                                <span class="small ms-2 test-result" id="test-result-elasticsearch"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+.settings-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+}
+.settings-sidebar {
+    height: fit-content;
+    position: sticky;
+    top: 78px;
+}
+.settings-link {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: #334155;
+    font-weight: 500;
+}
+.settings-link:hover {
+    background: #eef4ff;
+    color: #1a6fe8;
+}
+.settings-link.active {
+    background: #e7efff;
+    color: #1a6fe8;
+}
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    background: #94a3b8;
+}
+.status-dot.connected {
+    background: #10b981;
+}
+.status-dot.simulator {
+    background: #f59e0b;
+}
+.status-dot.not_connected {
+    background: #94a3b8;
+}
+@media (max-width: 992px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+    .settings-sidebar {
+        position: static;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+    body { padding-top: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card w-100">
+        <div class="auth-logo">RetailMind</div>
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to continue managing your mall operations</p>
+
+        <form method="POST" id="login-form" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                <label for="{{ form.email.id }}" class="form-label">Email</label>
+                {{ form.email(class='form-control' + (' is-invalid' if form.email.errors else ''), placeholder='name@company.com') }}
+                <div class="invalid-feedback" id="login-email-error">Please enter a valid email address.</div>
+                {% for error in form.email.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.password.id }}" class="form-label">Password</label>
+                {{ form.password(class='form-control' + (' is-invalid' if form.password.errors else ''), placeholder='Enter your password') }}
+                <div class="invalid-feedback" id="login-password-error">Password is required.</div>
+                {% for error in form.password.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    {{ form.remember_me(class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.remember_me.id }}">Remember me</label>
+                </div>
+                <a href="{{ url_for('auth.forgot_password') }}">Forgot Password?</a>
+            </div>
+
+            {{ form.submit(class='btn btn-primary w-100') }}
+        </form>
+
+        <div class="divider my-4 text-center text-muted">OR</div>
+        <p class="text-center mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}">Create one -></a></p>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('login-form');
+        const emailInput = document.getElementById('{{ form.email.id }}');
+        const passwordInput = document.getElementById('{{ form.password.id }}');
+        const emailError = document.getElementById('login-email-error');
+        const passwordError = document.getElementById('login-password-error');
+
+        form.addEventListener('submit', function (event) {
+            let valid = true;
+            const emailValue = (emailInput.value || '').trim();
+            const passwordValue = (passwordInput.value || '').trim();
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailPattern.test(emailValue)) {
+                emailInput.classList.add('is-invalid');
+                emailError.style.display = 'block';
+                valid = false;
+            } else {
+                emailInput.classList.remove('is-invalid');
+                emailError.style.display = 'none';
+            }
+
+            if (!passwordValue) {
+                passwordInput.classList.add('is-invalid');
+                passwordError.style.display = 'block';
+                valid = false;
+            } else {
+                passwordInput.classList.remove('is-invalid');
+                passwordError.style.display = 'none';
+            }
+
+            if (!valid) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

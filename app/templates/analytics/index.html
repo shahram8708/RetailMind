@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics & Reporting{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page page-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-0">&#128202; Analytics &amp; Reporting</h2>
+            <div class="text-muted small">Business intelligence with real time performance trends</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a
+                class="btn btn-outline-primary"
+                href="{{ url_for('analytics.export_pdf', range=range_str, start=request.args.get('start'), end=request.args.get('end')) }}"
+            >&#128196; Export PDF</a>
+            <button type="button" class="btn btn-primary" id="exportAnalyticsCSV">&#128200; Export CSV</button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="range-pill-group">
+                    <a href="{{ url_for('analytics.index', range='7d') }}" class="range-pill {% if range_str == '7d' %}active{% endif %}" data-range="7d">7 Days</a>
+                    <a href="{{ url_for('analytics.index', range='30d') }}" class="range-pill {% if range_str == '30d' %}active{% endif %}" data-range="30d">30 Days</a>
+                    <a href="{{ url_for('analytics.index', range='quarter') }}" class="range-pill {% if range_str == 'quarter' %}active{% endif %}" data-range="quarter">Quarter</a>
+                    <a href="{{ url_for('analytics.index', range='custom', start=request.args.get('start'), end=request.args.get('end')) }}" class="range-pill {% if range_str == 'custom' %}active{% endif %}" data-range="custom">Custom</a>
+                </div>
+                <div class="small text-muted">Showing data from {{ start_dt.strftime('%b %d') }} to {{ end_dt.strftime('%b %d, %Y') }}</div>
+            </div>
+
+            <div class="custom-date-row {% if range_str == 'custom' %}d-flex{% endif %}" id="customDateRow">
+                <input type="date" class="form-control form-control-sm" id="customStartDate" value="{{ request.args.get('start', '') }}">
+                <input type="date" class="form-control form-control-sm" id="customEndDate" value="{{ request.args.get('end', '') }}">
+                <button type="button" class="btn btn-sm btn-primary" id="applyCustomRange">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="roi-card-grid mb-4">
+        <div class="roi-card" style="border-left-color: var(--color-teal);">
+            <div class="roi-label">Revenue Saved from Stockouts</div>
+            <div class="roi-value" data-roi-key="stockout_prevention_revenue">&#8377;{{ roi_data.stockout_prevention_revenue | format_inr }}</div>
+            <div class="small text-muted" data-roi-key="stockout_actions_count">{{ roi_data.stockout_actions_count }} restock actions approved</div>
+            <div class="roi-trend {% if roi_data.stockout_trend_pct >= 0 %}positive{% else %}negative{% endif %}" data-roi-key="stockout_trend_pct">
+                {{ '+' if roi_data.stockout_trend_pct >= 0 else '' }}{{ roi_data.stockout_trend_pct | int }}% vs previous period
+            </div>
+        </div>
+
+        <div class="roi-card" style="border-left-color: var(--color-blue);">
+            <div class="roi-label">Revenue Attributed from Campaigns</div>
+            <div class="roi-value" data-roi-key="campaign_revenue">&#8377;{{ roi_data.campaign_revenue | format_inr }}</div>
+            <div class="small text-muted" data-roi-key="campaigns_count">{{ roi_data.campaigns_count }} campaigns activated</div>
+            <div class="roi-trend {% if roi_data.campaign_trend_pct >= 0 %}positive{% else %}negative{% endif %}" data-roi-key="campaign_trend_pct">
+                {{ '+' if roi_data.campaign_trend_pct >= 0 else '' }}{{ roi_data.campaign_trend_pct | int }}% vs previous period
+            </div>
+        </div>
+
+        <div class="roi-card" style="border-left-color: var(--color-orange);">
+            <div class="roi-label">Maintenance Cost Saved</div>
+            <div class="roi-value" data-roi-key="maintenance_cost_saved">&#8377;{{ roi_data.maintenance_cost_saved | format_inr }}</div>
+            <div class="small text-muted" data-roi-key="work_orders_completed">{{ roi_data.work_orders_completed }} work orders completed</div>
+            <div class="roi-trend {% if roi_data.maintenance_trend_pct >= 0 %}positive{% else %}negative{% endif %}" data-roi-key="maintenance_trend_pct">
+                {{ '+' if roi_data.maintenance_trend_pct >= 0 else '' }}{{ roi_data.maintenance_trend_pct | int }}% vs previous period
+            </div>
+        </div>
+
+        <div class="roi-card total roi-total">
+            <div class="roi-label">Total Agent Generated ROI</div>
+            <div class="roi-value" data-roi-key="total_roi">&#8377;{{ roi_data.total_roi | format_inr }}</div>
+            <div class="small" style="opacity: 0.85;">All 3 mission engines combined</div>
+            <div class="roi-trend {% if roi_data.total_roi_trend_pct >= 0 %}positive{% else %}negative{% endif %}" data-roi-key="total_roi_trend_pct">
+                {{ '+' if roi_data.total_roi_trend_pct >= 0 else '' }}{{ roi_data.total_roi_trend_pct | int }}% vs previous period
+            </div>
+        </div>
+    </div>
+
+    <div class="ai-summary-card mb-4">
+        <div class="ai-summary-label">&#129302; AI Performance Summary</div>
+        <div class="ai-summary-text">{{ summary_text }}</div>
+        <div class="text-end mt-2 small text-muted">Powered by Google Gemini</div>
+    </div>
+
+    <div class="card chart-card mb-4">
+        <div class="card-header bg-white fw-semibold">Daily Foot Traffic by Zone</div>
+        <div class="card-body">
+            <div class="chart-empty-state d-none" id="footTrafficEmpty">Insufficient data for this period.</div>
+            <div style="height: 250px;"><canvas id="footTrafficChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="charts-2col mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-white fw-semibold">Inventory Risk Events per Day</div>
+            <div class="card-body">
+                <div class="chart-empty-state d-none" id="inventoryRiskEmpty">Insufficient data for this period.</div>
+                <div style="height: 200px;"><canvas id="inventoryRiskChart"></canvas></div>
+            </div>
+        </div>
+        <div class="card chart-card">
+            <div class="card-header bg-white fw-semibold">Campaign Reach &amp; Conversions (Top 5)</div>
+            <div class="card-body">
+                <div class="chart-empty-state d-none" id="campaignPerfEmpty">Insufficient data for this period.</div>
+                <div style="height: 200px;"><canvas id="campaignPerfChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-2col mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-white fw-semibold">Facility Anomaly Events per Day</div>
+            <div class="card-body">
+                <div class="chart-empty-state d-none" id="facilityAnomalyEmpty">Insufficient data for this period.</div>
+                <div style="height: 200px;"><canvas id="facilityAnomalyChart"></canvas></div>
+            </div>
+        </div>
+        <div class="card chart-card">
+            <div class="card-header bg-white fw-semibold">Agent Actions by Mission</div>
+            <div class="card-body">
+                <div class="chart-empty-state d-none" id="agentActionEmpty">Insufficient data for this period.</div>
+                <div style="height: 200px;"><canvas id="agentActionPieChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    {% set max_revenue = (tenant_performance[0].estimated_revenue_inr if tenant_performance else 1) %}
+
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">Tenant Performance Summary</div>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="exportTableCSV">Export This Table (CSV)</button>
+        </div>
+        <div class="card-body p-0">
+            {% if tenant_performance %}
+                <div class="table-responsive">
+                    <table class="table mb-0" id="tenantPerformanceTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="sortable-header" data-column="tenant">Tenant Name</th>
+                                <th class="sortable-header" data-column="category">Category</th>
+                                <th class="sortable-header" data-column="zone">Zone</th>
+                                <th class="sortable-header" data-column="revenue">Est. Revenue INR</th>
+                                <th class="sortable-header" data-column="inventory_alerts">Inventory Alerts</th>
+                                <th class="sortable-header" data-column="campaigns">Campaigns</th>
+                                <th class="sortable-header" data-column="agent_actions">Agent Actions</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in tenant_performance %}
+                                {% set bar_width = ((row.estimated_revenue_inr / max_revenue) * 100) if max_revenue else 0 %}
+                                <tr>
+                                    <td data-value="{{ loop.index }}">{{ loop.index }}</td>
+                                    <td data-value="{{ row.tenant_name }}">{{ row.tenant_name }}</td>
+                                    <td data-value="{{ row.category }}">{{ row.category }}</td>
+                                    <td data-value="{{ row.zone }}">{{ row.zone }}</td>
+                                    <td data-value="{{ row.estimated_revenue_inr }}">{{ row.estimated_revenue_inr | int | format_inr }}</td>
+                                    <td data-value="{{ row.inventory_alerts }}">{{ row.inventory_alerts }}</td>
+                                    <td data-value="{{ row.campaigns_activated }}">{{ row.campaigns_activated }}</td>
+                                    <td data-value="{{ row.agent_actions_total }}">{{ row.agent_actions_total }}</td>
+                                    <td>
+                                        <div class="performance-bar-wrap">
+                                            <div class="performance-bar-fill" style="width: {{ '%.1f'|format(bar_width) }}%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-muted">No tenant performance records available for this period.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+const chartData = {{ chart_data | tojson | safe }};
+const roiData = {{ roi_data | tojson | safe }};
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}" defer></script>
+{% endif %}
+{% endblock %}

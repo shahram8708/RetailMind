@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ campaign.campaign_name }}{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/campaigns.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="campaigns-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <a href="{{ url_for('campaigns.index') }}" class="small text-muted">&larr; Campaigns</a>
+            <h2 class="mb-0 mt-1">{{ campaign.campaign_name }}</h2>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge status-badge {{ campaign.status }}">{{ campaign.status }}</span>
+            {% if campaign.status == 'active' %}
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-toggle-campaign-status"
+                    data-campaign-id="{{ campaign.id }}"
+                    data-target-status="paused"
+                >Pause</button>
+            {% else %}
+                <button
+                    type="button"
+                    class="btn btn-primary btn-toggle-campaign-status"
+                    data-campaign-id="{{ campaign.id }}"
+                    data-target-status="active"
+                >Activate</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="campaign-detail-grid">
+        <div>
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">&#128227; Campaign Creative</div>
+                <div class="card-body">
+                    <div class="campaign-creative-preview mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="fw-semibold">{{ campaign.campaign_name }}</div>
+                            <span class="badge bg-light text-dark">{{ campaign.channel }}</span>
+                        </div>
+                        <div class="creative-preview-card">
+                            <div class="small text-uppercase opacity-75 mb-2">
+                                {% if campaign.channel == 'push_notification' %}
+                                    Push Notification Preview
+                                {% elif campaign.channel == 'digital_signage' %}
+                                    Digital Signage Preview
+                                {% elif campaign.channel == 'sms' %}
+                                    SMS Preview
+                                {% elif campaign.channel == 'email' %}
+                                    Email Preview
+                                {% else %}
+                                    In App Preview
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">{{ campaign.campaign_copy }}</div>
+                            <div class="small opacity-75">{{ tenant.name if tenant else 'Unknown Tenant' }} - Zone {{ campaign.target_zone or (tenant.zone if tenant else '-') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="small text-muted">
+                        Channel: {{ campaign.channel }}<br>
+                        Target Zone: {{ campaign.target_zone or '-' }}<br>
+                        Target Audience: {{ campaign.target_audience_description or 'General mall visitors' }}
+                    </div>
+                </div>
+            </div>
+
+            {% if campaign.activated_at %}
+                <div class="card mb-3">
+                    <div class="card-header bg-white fw-semibold">&#128202; Performance Metrics</div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="campaign-stat-card">
+                                    <div class="label">Impressions</div>
+                                    <div class="value">{{ campaign.impressions | format_inr }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campaign-stat-card">
+                                    <div class="label">Clicks</div>
+                                    <div class="value">{{ campaign.clicks | format_inr }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campaign-stat-card">
+                                    <div class="label">Click Rate</div>
+                                    <div class="value" style="color: {% if click_rate > 5 %}#10B981{% elif click_rate >= 2 %}#F97316{% else %}#EF4444{% endif %};">{{ '%.1f' | format(click_rate) }}%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campaign-stat-card">
+                                    <div class="label">Conversions</div>
+                                    <div class="value">{{ campaign.conversions }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campaign-stat-card">
+                                    <div class="label">Conversion Rate</div>
+                                    <div class="value">{{ '%.1f' | format(conversion_rate) }}%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campaign-stat-card teal">
+                                    <div class="label">Revenue Attributed</div>
+                                    <div class="value">&#8377;{{ campaign.revenue_attributed | int | format_inr }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-white fw-semibold">Hourly Performance</div>
+                    <div class="card-body">
+                        <div style="height: 220px;">
+                            <canvas id="campaignPerfChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mb-3">
+                    <div class="card-body text-muted">Activate this campaign to see performance data.</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">&#129504; Opportunity Score Analysis</div>
+                <div class="card-body">
+                    <div class="d-flex align-items-end gap-2 mb-3">
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--color-teal);">{{ ((campaign.opportunity_score or 0) * 100) | int }}%</div>
+                        <div class="text-muted">COS</div>
+                    </div>
+
+                    <div class="cos-factor-row">
+                        <div class="label">&#128694; Traffic Factor (30%)</div>
+                        <div class="cos-factor-bar"><div class="cos-factor-fill" data-width="{{ (cos_factors.tf * 100) | int }}%"></div></div>
+                        <div class="small">{{ (cos_factors.tf * 100) | int }}%</div>
+                    </div>
+                    <div class="cos-factor-row">
+                        <div class="label">&#127991;&#65039; Promotion Potential (20%)</div>
+                        <div class="cos-factor-bar"><div class="cos-factor-fill" data-width="{{ (cos_factors.tp * 100) | int }}%"></div></div>
+                        <div class="small">{{ (cos_factors.tp * 100) | int }}%</div>
+                    </div>
+                    <div class="cos-factor-row">
+                        <div class="label">&#127780;&#65039; Weather Match (20%)</div>
+                        <div class="cos-factor-bar"><div class="cos-factor-fill" data-width="{{ (cos_factors.wm * 100) | int }}%"></div></div>
+                        <div class="small">{{ (cos_factors.wm * 100) | int }}%</div>
+                    </div>
+                    <div class="small text-muted mb-2">{{ campaign.weather_context or 'Weather neutral baseline' }}</div>
+
+                    <div class="cos-factor-row">
+                        <div class="label">&#127881; Event Proximity (15%)</div>
+                        <div class="cos-factor-bar"><div class="cos-factor-fill" data-width="{{ (cos_factors.em * 100) | int }}%"></div></div>
+                        <div class="small">{{ (cos_factors.em * 100) | int }}%</div>
+                    </div>
+                    {% if campaign.event_context %}
+                        <div class="small text-muted mb-2">{{ campaign.event_context }}</div>
+                    {% endif %}
+
+                    <div class="cos-factor-row">
+                        <div class="label">&#128179; Loyalty Score (15%)</div>
+                        <div class="cos-factor-bar"><div class="cos-factor-fill" data-width="{{ (cos_factors.lp * 100) | int }}%"></div></div>
+                        <div class="small">{{ (cos_factors.lp * 100) | int }}%</div>
+                    </div>
+                    <div class="small text-muted mb-2">Phase 2 feature</div>
+
+                    <div class="small text-muted mb-3">Recent Campaign Penalty: {{ (cos_factors.rc * 100) | int }}%</div>
+
+                    <div class="cos-formula">COS = (0.30xTF + 0.20xTP + 0.20xWM + 0.15xEM + 0.15xLP) x (1-RC)</div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Targeting Parameters</div>
+                <div class="card-body small">
+                    Zone: <span class="badge bg-light text-dark border">{{ campaign.target_zone or '-' }}</span><br>
+                    Tenant: {{ tenant.name if tenant else 'Unknown' }} ({{ tenant.category if tenant else 'N/A' }})<br>
+                    Channel: {{ campaign.channel }}<br>
+                    Weather Context: {{ campaign.weather_context or 'N/A' }}<br>
+                    Event Context: {{ campaign.event_context or 'N/A' }}<br>
+                    Created by: {% if campaign.created_by_agent %}RetailMind Campaign Agent{% else %}Manual{% endif %}<br>
+                    Created at: {{ campaign.created_at.strftime('%d %b %Y %I:%M %p') if campaign.created_at else 'N/A' }}
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <button class="btn btn-outline-secondary btn-sm mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#geminiPromptCollapse" aria-expanded="false">
+                        Show Technical Details
+                    </button>
+                    <div class="collapse" id="geminiPromptCollapse">
+                        <div class="small text-muted mb-2">What Gemini was told -&gt;</div>
+                        <pre class="gemini-prompt-block">{{ campaign.gemini_prompt_used or 'No Gemini prompt logged.' }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Edit Campaign</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('campaigns.edit', campaign_id=campaign.id) }}">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-2">
+                            <label class="form-label small">Campaign Name</label>
+                            {{ form.campaign_name(class='form-control form-control-sm') }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Campaign Copy</label>
+                            {{ form.campaign_copy(class='form-control form-control-sm', rows='4') }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Channel</label>
+                            {{ form.channel(class='form-select form-select-sm') }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Campaign Expiry</label>
+                            {{ form.expires_at(class='form-control form-control-sm') }}
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+const campaignPerfData = {{ hourly_perf_data | tojson | safe }};
+const cosFactors = {{ cos_factors | tojson | safe }};
+</script>
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/campaigns.js') }}" defer></script>
+{% endif %}
+{% endblock %}

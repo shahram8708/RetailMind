@@ -1,0 +1,263 @@
+.facility-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+}
+
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.equipment-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid;
+    overflow: hidden;
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+
+.equipment-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.equipment-card.fps-healthy {
+    border-left-color: var(--color-green);
+}
+
+.equipment-card.fps-monitor {
+    border-left-color: var(--color-yellow);
+}
+
+.equipment-card.fps-risk {
+    border-left-color: var(--color-orange);
+}
+
+.equipment-card.fps-critical {
+    border-left-color: var(--color-red);
+}
+
+.equipment-card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--color-grey-100);
+}
+
+.equipment-card-body {
+    padding: 12px 20px 16px;
+}
+
+.fps-bar-container {
+    width: 100%;
+    height: 6px;
+    background: var(--color-grey-200);
+    border-radius: 3px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+
+.fps-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+}
+
+.fps-bar-fill.fps-healthy {
+    background: var(--color-green);
+}
+
+.fps-bar-fill.fps-monitor {
+    background: var(--color-yellow);
+}
+
+.fps-bar-fill.fps-risk {
+    background: var(--color-orange);
+}
+
+.fps-bar-fill.fps-critical {
+    background: var(--color-red);
+}
+
+.anomaly-banner {
+    background: #FEF2F2;
+    color: var(--color-red);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.z-score-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.z-score-badge.moderate {
+    background: #FFF7ED;
+    color: var(--color-orange);
+}
+
+.z-score-badge.severe {
+    background: #FEF2F2;
+    color: var(--color-red);
+}
+
+.priority-badge.critical {
+    background: var(--color-red);
+    color: white;
+}
+
+.priority-badge.high {
+    background: var(--color-orange);
+    color: white;
+}
+
+.priority-badge.medium {
+    background: var(--color-yellow);
+    color: white;
+}
+
+.priority-badge.low {
+    background: var(--color-grey-200);
+    color: var(--color-grey-900);
+}
+
+.telemetry-chart-card {
+    border-radius: var(--border-radius-lg);
+}
+
+.facility-detail-grid {
+    display: grid;
+    grid-template-columns: 65fr 35fr;
+    gap: 20px;
+}
+
+.equipment-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.srs-gauge-wrapper {
+    position: relative;
+    width: 180px;
+    height: 100px;
+    margin: 0 auto;
+}
+
+.srs-gauge-center-text {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.srs-gauge-score {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.srs-gauge-label {
+    font-size: 0.75rem;
+    color: var(--color-grey-500);
+}
+
+.factor-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.factor-meta {
+    width: 170px;
+    font-size: 0.78rem;
+    color: var(--color-grey-700);
+}
+
+.factor-bar-container {
+    flex: 1;
+    height: 8px;
+    background: var(--color-grey-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.fps-factor-fill {
+    height: 100%;
+    background: var(--color-blue);
+    border-radius: 4px;
+    transition: width 0.8s ease;
+}
+
+.agent-recommendation-card {
+    border: 2px solid var(--color-blue);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+.agent-recommendation-header {
+    background: var(--color-navy);
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.agent-reasoning-text {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-grey-900);
+    padding: 20px;
+}
+
+.agent-recommendation-actions {
+    padding: 0 20px 20px;
+    display: grid;
+    gap: 10px;
+}
+
+.bg-orange {
+    background-color: var(--color-orange) !important;
+}
+
+.wo-status-completed {
+    opacity: 0.6;
+}
+
+@media (max-width: 1199px) {
+    .equipment-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 991px) {
+    .facility-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .equipment-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .equipment-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .equipment-info-grid {
+        grid-template-columns: 1fr;
+    }
+}

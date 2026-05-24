@@ -1,0 +1,154 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-light-bg) 0%, var(--color-grey-200) 100%);
+    padding: 40px 20px;
+}
+
+.auth-card {
+    background: white;
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-navy);
+}
+
+.auth-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    color: var(--color-grey-500);
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--color-grey-900);
+    margin-bottom: 6px;
+}
+
+.form-control {
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--color-grey-200);
+    padding: 10px 14px;
+    font-size: 0.9375rem;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control:focus {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(26, 111, 232, 0.15);
+    outline: none;
+}
+
+.password-strength {
+    display: flex;
+    gap: 6px;
+}
+
+.password-strength .strength-dot {
+    width: 22px;
+    height: 6px;
+    border-radius: 10px;
+    background: #D1D5DB;
+    transition: background-color 0.2s ease;
+}
+
+.password-strength .strength-dot.active-1 {
+    background: #EF4444;
+}
+
+.password-strength .strength-dot.active-2 {
+    background: #F59E0B;
+}
+
+.password-strength .strength-dot.active-3 {
+    background: #3B82F6;
+}
+
+.password-strength .strength-dot.active-4 {
+    background: #10B981;
+}
+
+.password-rules {
+    color: var(--color-grey-500);
+    font-size: 0.85rem;
+    padding-left: 18px;
+}
+
+.register-two-col {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    width: min(1080px, 100%);
+    background: white;
+    border-radius: var(--border-radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.register-form-col {
+    padding: 40px;
+}
+
+.register-promo-col {
+    background: linear-gradient(135deg, var(--color-navy) 0%, var(--color-blue) 100%);
+    border-radius: 0 var(--border-radius-xl) var(--border-radius-xl) 0;
+    padding: 40px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.register-promo-col h2,
+.register-promo-col p,
+.register-promo-col h3 {
+    color: white;
+}
+
+.promo-metric h3 {
+    margin-bottom: 2px;
+    font-size: 1.6rem;
+}
+
+@media (max-width: 992px) {
+    .register-two-col {
+        grid-template-columns: 1fr;
+    }
+
+    .register-promo-col {
+        display: none;
+    }
+
+    .register-form-col {
+        padding: 28px;
+    }
+}
+
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 28px 20px;
+        border-radius: 14px;
+    }
+
+    .register-form-col {
+        padding: 22px 18px;
+    }
+}

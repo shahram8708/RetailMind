@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% from 'partials/_pagination.html' import render_pagination %}
+
+{% block title %}Platform-Wide Agent Activity{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="mb-0">Platform-Wide Agent Activity</h2>
+                <div class="text-muted small">Cross property mission actions, approvals, and reasoning log</div>
+            </div>
+            <a
+                class="btn btn-outline-primary"
+                href="{{ url_for('superadmin.export_agent_logs', mission_type=filters.mission_type, status=filters.status, property_id=filters.property_id, date_from=filters.date_from, date_to=filters.date_to) }}"
+            >Download All Logs (CSV)</a>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ total_actions_month }}</div>
+                    <div class="sa-kpi-label">Total Actions (This Month)</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value" style="font-size: 1.2rem;">{{ most_active_property }}</div>
+                    <div class="sa-kpi-label">Most Active Property</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ '%.0f'|format(approval_rate) }}%</div>
+                    <div class="sa-kpi-label">Approval Rate</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="sa-kpi-tile">
+                    <div class="sa-kpi-value">{{ auto_executed_count }}</div>
+                    <div class="sa-kpi-label">Auto-Executed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('superadmin.agent_logs') }}" class="row g-2 align-items-end">
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small">Mission Type</label>
+                        <select name="mission_type" class="form-select form-select-sm">
+                            <option value="all" {% if filters.mission_type == 'all' %}selected{% endif %}>All</option>
+                            <option value="inventory" {% if filters.mission_type == 'inventory' %}selected{% endif %}>Inventory</option>
+                            <option value="campaign" {% if filters.mission_type == 'campaign' %}selected{% endif %}>Campaign</option>
+                            <option value="facility" {% if filters.mission_type == 'facility' %}selected{% endif %}>Facility</option>
+                            <option value="shopper" {% if filters.mission_type == 'shopper' %}selected{% endif %}>Shopper</option>
+                            <option value="system" {% if filters.mission_type == 'system' %}selected{% endif %}>System</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All</option>
+                            <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="approved" {% if filters.status == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="rejected" {% if filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="auto_executed" {% if filters.status == 'auto_executed' %}selected{% endif %}>Auto Executed</option>
+                            <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <label class="form-label small">Property</label>
+                        <select name="property_id" class="form-select form-select-sm">
+                            <option value="0" {% if filters.property_id == 0 %}selected{% endif %}>All Properties</option>
+                            {% for property in properties %}
+                            <option value="{{ property.id }}" {% if filters.property_id == property.id %}selected{% endif %}>{{ property.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small">Date From</label>
+                        <input type="date" class="form-control form-control-sm" name="date_from" value="{{ filters.date_from }}">
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small">Date To</label>
+                        <input type="date" class="form-control form-control-sm" name="date_to" value="{{ filters.date_to }}">
+                    </div>
+                    <div class="col-lg-1 col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-sa-primary btn-sm w-100">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>Mission</th>
+                                <th>Action Type</th>
+                                <th>Description</th>
+                                <th>Score</th>
+                                <th>Status</th>
+                                <th>Resolved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action, property in pagination.items %}
+                            <tr class="expandable" data-bs-toggle="collapse" data-bs-target="#agent-log-reasoning-{{ action.id }}" aria-expanded="false">
+                                <td><a href="{{ url_for('superadmin.property_detail', property_id=property.id) }}">{{ property.name }}</a></td>
+                                <td>#{{ action.id }}</td>
+                                <td>{{ action.created_at | relative_time }}</td>
+                                <td>{{ action.mission_type|title }}</td>
+                                <td>{{ action.action_type|replace('_', ' ')|title }}</td>
+                                <td>{{ action.description|truncate(90) }}</td>
+                                <td>{{ action.score|round(2) if action.score is not none else '-' }}</td>
+                                <td><span class="badge {% if action.status == 'pending' %}text-bg-primary{% elif action.status in ['approved', 'auto_executed'] %}text-bg-success{% elif action.status == 'rejected' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">{{ action.status|replace('_', ' ')|title }}</span></td>
+                                <td>{{ action.resolved_at | relative_time if action.resolved_at else '-' }}</td>
+                            </tr>
+                            <tr class="collapse" id="agent-log-reasoning-{{ action.id }}">
+                                <td colspan="9">
+                                    <div class="small">
+                                        <strong>Reasoning:</strong> {{ action.agent_reasoning or 'No detailed reasoning captured for this action.' }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="9" class="text-muted">No agent actions found for current filters.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ render_pagination(pagination) }}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

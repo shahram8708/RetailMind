@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}System Health{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="sa-mode-banner">
+    <span>&#9889; SUPERADMIN MODE - Platform Control Panel</span>
+    <span>|</span>
+    <span>Viewing as: {{ current_user.full_name }}</span>
+    <span>|</span>
+    <a href="{{ url_for('dashboard.index') }}">Exit Superadmin -></a>
+</div>
+
+<div class="sa-page-wrapper">
+    <aside class="sa-sidebar">
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}" href="{{ url_for('superadmin.dashboard') }}">&#128202; Overview</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.properties' or request.endpoint == 'superadmin.property_detail' %}active{% endif %}" href="{{ url_for('superadmin.properties') }}">&#127970; Properties</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.users' %}active{% endif %}" href="{{ url_for('superadmin.users') }}">&#128101; All Users</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.tenants' %}active{% endif %}" href="{{ url_for('superadmin.tenants') }}">&#127970; All Tenants</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.billing' %}active{% endif %}" href="{{ url_for('superadmin.billing') }}">&#128179; Billing & Revenue</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.agent_logs' %}active{% endif %}" href="{{ url_for('superadmin.agent_logs') }}">&#129302; Agent Activity</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.demo_requests' %}active{% endif %}" href="{{ url_for('superadmin.demo_requests') }}">&#128203; Demo Requests</a>
+        <a class="sa-sidebar-link {% if request.endpoint == 'superadmin.system_health' %}active{% endif %}" href="{{ url_for('superadmin.system_health') }}">&#9881; System Health</a>
+        <div class="sa-sidebar-divider"></div>
+        <a class="sa-sidebar-link" href="{{ url_for('dashboard.index') }}"><- Back to App</a>
+    </aside>
+
+    <section class="sa-content">
+        <div class="sa-uptime-banner {% if issue_count > 0 %}warn{% else %}ok{% endif %}">
+            {% if issue_count > 0 %}
+                &#9888; {{ issue_count }} Issues Detected - Uptime: {{ uptime_formatted }}
+            {% else %}
+                &#9989; All Systems Operational - Uptime: {{ uptime_formatted }}
+            {% endif %}
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge text-bg-light border">Environment: {{ flask_env }}</span>
+                    <span class="badge text-bg-light border">Flask: {{ flask_version }}</span>
+                    <span class="badge text-bg-light border">Python: {{ python_version }}</span>
+                    <span class="badge text-bg-light border">Started: {{ start_time.strftime('%Y-%m-%d %H:%M UTC') if start_time else '-' }}</span>
+                    <span class="badge text-bg-light border">DB: SQLite</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+                <div class="health-card health-card-ok">
+                    <h6 class="mb-2">&#128451; Database</h6>
+                    <div class="sa-status-ok">&#9989; Connected</div>
+                    <div class="small mt-2">File size: {{ '%.2f'|format(size_mb) }} MB</div>
+                    <div class="small">Total tables: {{ total_tables }}</div>
+                    <div class="small text-muted mt-1">Path: {{ db_path }}</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="health-card {% if not gemini_status.enabled %}health-card-inactive{% elif gemini_status.error %}health-card-error{% else %}health-card-ok{% endif %}">
+                    <h6 class="mb-2">&#129302; Google Gemini AI</h6>
+                    {% if not gemini_status.enabled %}
+                        <div class="sa-status-inactive">&#10060; Not Configured</div>
+                        <div class="small mt-2">Set GEMINI_API_KEY in .env</div>
+                    {% elif gemini_status.error %}
+                        <div class="sa-status-error">&#9888; Error</div>
+                        <div class="small text-danger mt-2">{{ gemini_status.error }}</div>
+                    {% else %}
+                        <div class="sa-status-ok">&#9989; Connected</div>
+                        <div class="small mt-2">Latency: <span class="latency-badge">{{ gemini_status.latency_ms }}ms</span></div>
+                        <div class="small">Last test response: "{{ gemini_status.response or '-' }}"</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="health-card {% if not razorpay_status.enabled %}health-card-inactive{% elif razorpay_status.error %}health-card-error{% else %}health-card-ok{% endif %}">
+                    <h6 class="mb-2">&#128179; Razorpay</h6>
+                    {% if not razorpay_status.enabled %}
+                        <div class="sa-status-inactive">&#10060; Not Configured</div>
+                        <div class="small mt-2">Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env</div>
+                    {% elif razorpay_status.error %}
+                        <div class="sa-status-error">&#9888; Error</div>
+                        <div class="small text-danger mt-2">{{ razorpay_status.error }}</div>
+                    {% else %}
+                        <div class="sa-status-ok">&#9989; Connected</div>
+                        <div class="small mt-2">Key ID: {{ razorpay_status.key_id_prefix or '-' }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="health-card {% if not es_status.enabled %}health-card-inactive{% elif es_status.error or not es_status.connected %}health-card-error{% else %}health-card-ok{% endif %}">
+                    <h6 class="mb-2">&#128269; Elasticsearch</h6>
+                    {% if not es_status.enabled %}
+                        <div class="sa-status-inactive">&#10060; Not Configured</div>
+                        <div class="small mt-2">Set ES_CLOUD_ID and ES_API_KEY in .env - Using SQLite search fallback</div>
+                    {% elif es_status.error or not es_status.connected %}
+                        <div class="sa-status-error">&#9888; Connection Failed</div>
+                        <div class="small text-danger mt-2">{{ es_status.error or 'Ping failed' }}</div>
+                    {% else %}
+                        <div class="sa-status-ok">&#9989; Connected</div>
+                        <div class="small mt-2">Ping: {{ es_status.connected }}</div>
+                        <div class="small">Cluster status: {{ es_status.cluster_status or '-' }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Database Record Counts</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 table-striped">
+                        <thead>
+                            <tr>
+                                <th>Model Name</th>
+                                <th>Record Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model_name, count in record_counts.items() %}
+                            <tr {% if count == 0 %}class="record-count-zero"{% endif %}>
+                                <td>{{ model_name }}</td>
+                                <td>{{ count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">
+                Background Jobs - Scheduler Status:
+                {% if scheduler_running %}
+                    <span class="sa-status-ok">&#9989; Running</span>
+                {% else %}
+                    <span class="sa-status-error">&#10060; Stopped</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if not scheduler_running %}
+                <div class="alert alert-danger m-3">&#9888; APScheduler is not running. Background jobs are inactive.</div>
+                {% endif %}
+
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Job Name</th>
+                                <th>Trigger</th>
+                                <th>Next Run</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in scheduler_jobs %}
+                            <tr>
+                                <td><span class="monospace-small">{{ job.id }}</span></td>
+                                <td>{{ job.name }}</td>
+                                <td>{{ job.trigger }}</td>
+                                <td>{{ job.next_run }}</td>
+                                <td><span class="badge text-bg-success">Scheduled</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-muted">No scheduler jobs configured.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted">Last seed run: {{ last_seed_run.strftime('%Y-%m-%d %H:%M UTC') if last_seed_run else 'Unknown' }}</div>
+            <a class="btn btn-sa-primary" href="{{ url_for('superadmin.system_health') }}">&#128260; Refresh Health Check</a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,347 @@
+:root {
+    --sa-primary: #7C3AED;
+    --sa-dark: #1E1B4B;
+    --sa-accent: #DB2777;
+    --sa-sidebar-bg: #1E1B4B;
+    --sa-banner-bg: #7C3AED;
+}
+
+.sa-mode-banner {
+    background: var(--sa-banner-bg);
+    color: #ffffff;
+    text-align: center;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.sa-mode-banner a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: underline;
+}
+
+.sa-page-wrapper {
+    padding-top: calc(60px + 32px);
+}
+
+.sa-sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--sa-sidebar-bg);
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding-top: 92px;
+    z-index: 100;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.sa-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+}
+
+.sa-sidebar-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--sa-primary);
+}
+
+.sa-sidebar-link.active {
+    color: #ffffff;
+    background: rgba(124, 58, 237, 0.2);
+    border-left-color: var(--sa-primary);
+}
+
+.sa-sidebar-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 12px 16px;
+}
+
+.sa-content {
+    margin-left: 240px;
+    padding: 24px;
+    min-height: 100vh;
+    background: #F5F3FF;
+}
+
+.sa-panel-banner {
+    background: #BE123C;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.sa-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.sa-kpi-tile {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-top: 3px solid var(--sa-primary);
+}
+
+.sa-kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--sa-dark);
+    line-height: 1;
+}
+
+.sa-kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6B7280;
+    margin-top: 6px;
+}
+
+.sa-kpi-sub {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    margin-top: 4px;
+}
+
+.sa-kpi-navy {
+    background: var(--sa-dark);
+    border-top-color: var(--sa-dark);
+}
+
+.sa-kpi-danger {
+    border-top-color: #EF4444;
+}
+
+.btn-sa-primary {
+    background: var(--sa-primary);
+    border-color: var(--sa-primary);
+    color: #ffffff;
+}
+
+.btn-sa-primary:hover {
+    background: #6D28D9;
+    border-color: #6D28D9;
+    color: #ffffff;
+}
+
+.btn-sa-danger {
+    background: var(--sa-accent);
+    border-color: var(--sa-accent);
+    color: #ffffff;
+}
+
+.btn-sa-danger:hover {
+    background: #BE185D;
+    border-color: #BE185D;
+    color: #ffffff;
+}
+
+.btn-sa-warning {
+    background: #F97316;
+    border-color: #F97316;
+    color: #ffffff;
+}
+
+.btn-sa-warning:hover {
+    background: #EA580C;
+    border-color: #EA580C;
+    color: #ffffff;
+}
+
+.sa-status-ok {
+    color: #10B981;
+    font-weight: 600;
+}
+
+.sa-status-warn {
+    color: #F59E0B;
+    font-weight: 600;
+}
+
+.sa-status-error {
+    color: #EF4444;
+    font-weight: 600;
+}
+
+.sa-status-inactive {
+    color: #9CA3AF;
+    font-weight: 600;
+}
+
+.health-card {
+    border-radius: 12px;
+    padding: 20px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.health-card-ok {
+    border-top: 3px solid #10B981;
+}
+
+.health-card-warn {
+    border-top: 3px solid #F59E0B;
+}
+
+.health-card-error {
+    border-top: 3px solid #EF4444;
+}
+
+.health-card-inactive {
+    border-top: 3px solid #D1D5DB;
+}
+
+.latency-badge {
+    display: inline-block;
+    background: #F3F4F6;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.record-count-zero td {
+    background: #FEFCE8;
+    color: #CA8A04;
+}
+
+.billing-charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.badge-tier-enterprise {
+    background: #1E1B4B;
+    color: #ffffff;
+}
+
+.badge-tier-professional {
+    background: #2563EB;
+    color: #ffffff;
+}
+
+.badge-tier-starter {
+    background: #6B7280;
+    color: #ffffff;
+}
+
+.sa-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: #EDE9FE;
+    color: var(--sa-dark);
+}
+
+.sa-row-muted {
+    opacity: 0.65;
+}
+
+.sa-outstanding-card {
+    border: 1px solid #FDBA74;
+}
+
+.sa-uptime-banner {
+    border-radius: 10px;
+    color: #ffffff;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-weight: 700;
+}
+
+.sa-uptime-banner.ok {
+    background: #059669;
+}
+
+.sa-uptime-banner.warn {
+    background: #D97706;
+}
+
+.monospace-small {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.75rem;
+}
+
+.sa-updated-indicator {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.7rem;
+    color: #6B7280;
+    transition: opacity 0.25s ease;
+}
+
+@media (max-width: 1199px) {
+    .sa-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 991px) {
+    .sa-sidebar {
+        position: static;
+        width: 100%;
+        min-height: auto;
+        padding-top: 0;
+        box-shadow: none;
+        border-radius: 10px;
+        margin-bottom: 12px;
+    }
+
+    .sa-content {
+        margin-left: 0;
+    }
+
+    .sa-page-wrapper {
+        padding-top: calc(60px + 48px);
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .billing-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .sa-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sa-mode-banner {
+        gap: 8px;
+        padding: 6px 8px;
+        font-size: 0.7rem;
+        flex-wrap: wrap;
+    }
+}

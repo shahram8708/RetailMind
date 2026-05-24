@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Team Management{% endblock %}
+
+{% block content %}
+<div class="page-container settings-page">
+    <div class="settings-layout">
+        <aside class="settings-sidebar card p-3">
+            <div class="small text-uppercase text-muted mb-2">Settings</div>
+            <nav class="nav flex-column gap-1">
+                <a class="settings-link {% if request.endpoint == 'settings.profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">👤 My Account</a>
+                {% if current_user.role in ['mall_admin', 'superadmin'] %}
+                <a class="settings-link {% if request.endpoint == 'settings.team' %}active{% endif %}" href="{{ url_for('settings.team') }}">👥 Team Members</a>
+                <a class="settings-link {% if request.endpoint == 'settings.billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">💳 Billing & Subscription</a>
+                {% endif %}
+                <a class="settings-link {% if request.endpoint == 'settings.integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">🔌 Data Integrations</a>
+                <hr>
+                <a class="settings-link" href="{{ url_for('agent.settings') }}">🤖 Agent Configuration</a>
+                <a class="settings-link" href="{{ url_for('agent.logs') }}">📋 Agent Logs</a>
+            </nav>
+        </aside>
+
+        <section class="settings-main">
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Current Team ({{ members|length }} members)</div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="teamMembersTable">
+                        <thead>
+                            <tr>
+                                <th>Avatar</th>
+                                <th>Name & Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                            <tr id="member-row-{{ member.id }}" class="{% if not member.is_active %}table-secondary{% endif %}">
+                                <td>
+                                    <div class="avatar-sm">{{ member.get_initials() }}</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ member.full_name }}</div>
+                                    <div class="small text-muted">{{ member.email }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge role-badge role-{{ member.role }}" id="role-badge-{{ member.id }}">{{ member.role|replace('_', ' ')|title }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if member.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}" id="status-badge-{{ member.id }}">{{ 'Active' if member.is_active else 'Deactivated' }}</span>
+                                </td>
+                                <td>{{ member.created_at | relative_time }}</td>
+                                <td>{{ member.last_login | relative_time if member.last_login else 'Never' }}</td>
+                                <td>
+                                    {% if member.id == current_user.id %}
+                                        <select class="form-select form-select-sm mb-1" disabled>
+                                            <option>{{ member.role|replace('_', ' ')|title }}</option>
+                                        </select>
+                                        <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot remove yourself">Cannot remove yourself</button>
+                                    {% else %}
+                                        <select
+                                            class="form-select form-select-sm mb-1 select-change-role"
+                                            data-user-id="{{ member.id }}"
+                                            data-user-name="{{ member.full_name }}"
+                                        >
+                                            <option value="store_manager" {% if member.role == 'store_manager' %}selected{% endif %}>Store Manager</option>
+                                            <option value="marketing_manager" {% if member.role == 'marketing_manager' %}selected{% endif %}>Marketing Manager</option>
+                                            <option value="facility_manager" {% if member.role == 'facility_manager' %}selected{% endif %}>Facility Manager</option>
+                                        </select>
+                                        <button
+                                            class="btn btn-sm btn-outline-danger btn-deactivate-member"
+                                            data-user-id="{{ member.id }}"
+                                            data-user-name="{{ member.full_name }}"
+                                            type="button"
+                                        >Deactivate</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Invite Team Member</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('settings.team', property_id=property.id) if current_user.is_superadmin() and property else url_for('settings.team') }}" class="row g-3 align-items-end">
+                        {{ invite_form.hidden_tag() }}
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label">{{ invite_form.full_name.label.text }}</label>
+                            {{ invite_form.full_name(class='form-control', placeholder='Full name') }}
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label">{{ invite_form.email.label.text }}</label>
+                            {{ invite_form.email(class='form-control', placeholder='name@example.com') }}
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label">{{ invite_form.role.label.text }}</label>
+                            {{ invite_form.role(class='form-select') }}
+                        </div>
+                        <div class="col-lg-1 col-md-6 d-grid">
+                            {{ invite_form.submit(class='btn btn-primary') }}
+                        </div>
+                    </form>
+                    <p class="small text-muted mt-3 mb-0">Invited members receive an email with login credentials and can immediately access RetailMind based on their role.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Roles Reference</div>
+                <div class="card-body small">
+                    <p class="mb-2">🏢 Mall Admin: Full access to all features</p>
+                    <p class="mb-2">🏪 Store Manager: Inventory monitoring only</p>
+                    <p class="mb-2">📣 Marketing Manager: Campaigns and analytics</p>
+                    <p class="mb-0">🔧 Facility Manager: Facility monitoring and work orders</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+.settings-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+}
+.settings-sidebar {
+    height: fit-content;
+    position: sticky;
+    top: 78px;
+}
+.settings-link {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: #334155;
+    font-weight: 500;
+}
+.settings-link:hover {
+    background: #eef4ff;
+    color: #1a6fe8;
+}
+.settings-link.active {
+    background: #e7efff;
+    color: #1a6fe8;
+}
+.avatar-sm {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #0a1628;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.role-badge.role-mall_admin {
+    background: #0a1628;
+    color: #fff;
+}
+.role-badge.role-store_manager {
+    background: #1a6fe8;
+    color: #fff;
+}
+.role-badge.role-marketing_manager {
+    background: #0d9488;
+    color: #fff;
+}
+.role-badge.role-facility_manager {
+    background: #f97316;
+    color: #fff;
+}
+@media (max-width: 992px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+    .settings-sidebar {
+        position: static;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if pwa_dev_mode %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endif %}
+{% endblock %}

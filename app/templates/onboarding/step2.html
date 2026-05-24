@@ -1,0 +1,171 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block step_content %}
+<div class="accordion" id="integrationAccordion">
+    <div class="card mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#posCardBody" role="button">
+            <div class="fw-semibold">POS System</div>
+            <span class="badge bg-primary-subtle text-primary" id="pos-selected-badge">{{ form.pos_system.data or 'Not connected' }}</span>
+        </div>
+        <div id="posCardBody" class="collapse show" data-bs-parent="#integrationAccordion">
+            <div class="card-body">
+                <label for="{{ form.pos_system.id }}" class="form-label">{{ form.pos_system.label.text }}</label>
+                {{ form.pos_system(class='form-select mb-3', id='pos-system-select') }}
+
+                <div id="pos-custom-fields" class="row g-3 d-none">
+                    <div class="col-md-8">
+                        <label for="{{ form.pos_api_endpoint.id }}" class="form-label">{{ form.pos_api_endpoint.label.text }}</label>
+                        {{ form.pos_api_endpoint(class='form-control', placeholder='https://api.example.com/v1') }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.pos_api_key.id }}" class="form-label">{{ form.pos_api_key.label.text }}</label>
+                        {{ form.pos_api_key(class='form-control', placeholder='Paste API key') }}
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary btn-sm mt-3 test-connection-btn">Test Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#inventoryCardBody" role="button">
+            <div class="fw-semibold">Inventory System</div>
+            <span class="badge bg-primary-subtle text-primary" id="inventory-selected-badge">{{ form.inventory_system.data or 'Not connected' }}</span>
+        </div>
+        <div id="inventoryCardBody" class="collapse show" data-bs-parent="#integrationAccordion">
+            <div class="card-body">
+                <label for="{{ form.inventory_system.id }}" class="form-label">{{ form.inventory_system.label.text }}</label>
+                {{ form.inventory_system(class='form-select mb-3', id='inventory-system-select') }}
+
+                <div id="inventory-custom-fields" class="row g-3 d-none">
+                    <div class="col-md-8">
+                        <label for="{{ form.inventory_api_endpoint.id }}" class="form-label">{{ form.inventory_api_endpoint.label.text }}</label>
+                        {{ form.inventory_api_endpoint(class='form-control', placeholder='https://api.example.com/v1') }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.inventory_api_key.id }}" class="form-label">{{ form.inventory_api_key.label.text }}</label>
+                        {{ form.inventory_api_key(class='form-control', placeholder='Paste API key') }}
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary btn-sm mt-3 test-connection-btn">Test Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#crmCardBody" role="button">
+            <div class="fw-semibold">CRM System</div>
+            <span class="badge bg-primary-subtle text-primary" id="crm-selected-badge">{{ form.crm_system.data or 'Not connected' }}</span>
+        </div>
+        <div id="crmCardBody" class="collapse show" data-bs-parent="#integrationAccordion">
+            <div class="card-body">
+                <label for="{{ form.crm_system.id }}" class="form-label">{{ form.crm_system.label.text }}</label>
+                {{ form.crm_system(class='form-select', id='crm-system-select') }}
+                <button type="button" class="btn btn-outline-primary btn-sm mt-3 test-connection-btn">Test Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#sensorCardBody" role="button">
+            <div class="fw-semibold">Sensor and IoT</div>
+            <span class="badge bg-primary-subtle text-primary" id="sensor-selected-badge">{{ form.sensor_source.data or 'simulator' }}</span>
+        </div>
+        <div id="sensorCardBody" class="collapse show" data-bs-parent="#integrationAccordion">
+            <div class="card-body">
+                <label for="{{ form.sensor_source.id }}" class="form-label">{{ form.sensor_source.label.text }}</label>
+                {{ form.sensor_source(class='form-select mb-3', id='sensor-source-select') }}
+
+                <div id="sensor-api-wrapper" class="d-none">
+                    <label for="{{ form.sensor_api_endpoint.id }}" class="form-label">IoT API Endpoint</label>
+                    {{ form.sensor_api_endpoint(class='form-control', placeholder='https://iot-provider.example.com/api/live') }}
+                </div>
+
+                <p class="small text-muted mb-0 mt-3">
+                    If you select RetailMind Simulator, the system will generate realistic foot traffic and sensor data for demonstration purposes.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">Weather API</div>
+        <div class="card-body">
+            <label for="{{ form.weather_api_key.id }}" class="form-label">{{ form.weather_api_key.label.text }}</label>
+            {{ form.weather_api_key(class='form-control', placeholder='Enter OpenWeatherMap API key (optional)') }}
+            <p class="small text-muted mt-2 mb-0">
+                Optional. Get your free API key from openweathermap.org. Used by the Campaign Activation Engine to factor weather into campaign scoring.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mb-0" role="alert">
+    Don't have these integrations yet? No problem. You can configure them later in Settings -> Integrations. Select Not connected or Simulator for now.
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const posSelect = document.getElementById('pos-system-select');
+        const invSelect = document.getElementById('inventory-system-select');
+        const crmSelect = document.getElementById('crm-system-select');
+        const sensorSelect = document.getElementById('sensor-source-select');
+
+        const posFields = document.getElementById('pos-custom-fields');
+        const invFields = document.getElementById('inventory-custom-fields');
+        const sensorApiWrapper = document.getElementById('sensor-api-wrapper');
+
+        function selectedLabel(selectEl) {
+            if (!selectEl || !selectEl.options || selectEl.selectedIndex < 0) {
+                return '';
+            }
+            return selectEl.options[selectEl.selectedIndex].text;
+        }
+
+        function syncBadge(selectEl, badgeId) {
+            const badge = document.getElementById(badgeId);
+            if (badge && selectEl) {
+                badge.textContent = selectedLabel(selectEl);
+            }
+        }
+
+        function toggleFields() {
+            if (posSelect && posFields) {
+                posFields.classList.toggle('d-none', posSelect.value !== 'custom_api');
+            }
+
+            if (invSelect && invFields) {
+                invFields.classList.toggle('d-none', invSelect.value !== 'custom_api');
+            }
+
+            if (sensorSelect && sensorApiWrapper) {
+                sensorApiWrapper.classList.toggle('d-none', sensorSelect.value !== 'iot_api');
+            }
+
+            syncBadge(posSelect, 'pos-selected-badge');
+            syncBadge(invSelect, 'inventory-selected-badge');
+            syncBadge(crmSelect, 'crm-selected-badge');
+            syncBadge(sensorSelect, 'sensor-selected-badge');
+        }
+
+        [posSelect, invSelect, crmSelect, sensorSelect].forEach((selectEl) => {
+            if (selectEl) {
+                selectEl.addEventListener('change', toggleFields);
+            }
+        });
+
+        document.querySelectorAll('.test-connection-btn').forEach((button) => {
+            button.addEventListener('click', function () {
+                showToast('Connection testing is coming soon in the next update.', 'info');
+            });
+        });
+
+        toggleFields();
+    });
+</script>
+{% endblock %}
