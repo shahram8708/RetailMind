@@ -14,7 +14,7 @@ A Flask-based retail management dashboard and API.
 1. Clone the repo and change into the project folder:
 
 ```
-git clone <repo-url>
+git clone https://github.com/shahram8708/RetailMind
 cd RETAILMIND
 ```
 
