@@ -267,12 +267,16 @@ def step3():
                 return redirect(url_for("onboarding.step4"))
 
             submitted_rows = _json_loads_safe(form.tenants_json.data, [])
+            if not isinstance(submitted_rows, list):
+                submitted_rows = []
+
             existing_by_unit = {
                 (tenant.unit_number or "").strip().lower(): tenant
                 for tenant in existing_tenants
                 if (tenant.unit_number or "").strip()
             }
 
+            complete_rows = []
             submitted_units = set()
             for row in submitted_rows:
                 if not isinstance(row, dict):
@@ -293,6 +297,17 @@ def step3():
                 except (TypeError, ValueError):
                     continue
 
+                complete_rows.append(
+                    {
+                        "name": name,
+                        "category": category,
+                        "zone": zone,
+                        "floor": floor_value,
+                        "unit_number": unit_number,
+                        "contact_email": contact_email,
+                    }
+                )
+
                 unit_key = unit_number.lower()
                 submitted_units.add(unit_key)
 
@@ -309,15 +324,21 @@ def step3():
                 tenant.contact_email = contact_email
                 tenant.is_active = True
 
-            for tenant in existing_tenants:
-                existing_key = (tenant.unit_number or "").strip().lower()
-                if not existing_key or existing_key not in submitted_units:
-                    db.session.delete(tenant)
+            if complete_rows:
+                for tenant in existing_tenants:
+                    existing_key = (tenant.unit_number or "").strip().lower()
+                    if not existing_key or existing_key not in submitted_units:
+                        db.session.delete(tenant)
+
+                session["tenant_setup_skipped"] = False
+            elif not existing_tenants:
+                session["tenant_setup_skipped"] = True
+            else:
+                session["tenant_setup_skipped"] = False
 
             db.session.flush()
             property_record.num_tenants = Tenant.query.filter_by(property_id=property_record.id).count()
 
-            session["tenant_setup_skipped"] = False
             session["onboarding_step"] = 4
             db.session.commit()
             return redirect(url_for("onboarding.step4"))

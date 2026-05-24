@@ -155,12 +155,6 @@
             return tenants;
         }
 
-        function hasAtLeastOneCompleteTenant(tenants) {
-            return tenants.some((tenant) => (
-                tenant.name && tenant.category && tenant.zone && tenant.floor !== '' && tenant.unit_number
-            ));
-        }
-
         addTenantBtn.addEventListener('click', function () {
             addTenantRow();
         });
@@ -173,11 +167,7 @@
         });
 
         onboardingForm.addEventListener('submit', function (event) {
-            const tenants = serializeTenants();
-            if (!skipForNow.checked && !hasAtLeastOneCompleteTenant(tenants)) {
-                event.preventDefault();
-                showToast('Please add at least one complete tenant row or choose skip for now.', 'error');
-            }
+            serializeTenants();
         });
 
         if (existingTenants.length > 0) {

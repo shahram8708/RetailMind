@@ -4,6 +4,9 @@ import unittest
 
 from app import create_app
 from app.extensions import db
+from app.models.property import MallProperty
+from app.models.tenant import Tenant
+from app.models.user import User
 from app.seed import seed_database_if_empty
 
 
@@ -181,6 +184,130 @@ class TestAuthenticatedRoutes(unittest.TestCase):
         response = self.client.get("/this-route-does-not-exist-at-all")
         self.assertEqual(response.status_code, 404)
         self.assertTrue(b"404" in response.data or b"Not Found" in response.data)
+
+
+class TestOnboardingStep3(unittest.TestCase):
+    def setUp(self):
+        self.app = create_test_app()
+        self.app.config["WTF_CSRF_ENABLED"] = False
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+
+        db.drop_all()
+        db.create_all()
+
+        self.user = User(
+            email="tenantflow@example.com",
+            full_name="Tenant Flow Admin",
+            role="mall_admin",
+            is_verified=True,
+            is_active=True,
+        )
+        self.user.set_password("TenantFlow123!")
+        db.session.add(self.user)
+        db.session.flush()
+
+        self.property = MallProperty(
+            owner_user_id=self.user.id,
+            name="Tenant Flow Mall",
+            location="123 Retail Avenue",
+            city="Mumbai",
+            country="India",
+            total_area_sqft=250000,
+            num_floors=4,
+            num_tenants=0,
+            onboarding_complete=False,
+            data_source_config=json.dumps(
+                {
+                    "pos_system": "shopify",
+                    "inventory_system": "none",
+                    "crm_system": "none",
+                    "sensor_source": "simulator",
+                }
+            ),
+        )
+        db.session.add(self.property)
+        db.session.flush()
+
+        self.user.property_id = self.property.id
+        db.session.commit()
+
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+
+    def login(self):
+        response = self.client.post(
+            "/auth/login",
+            data={
+                "email": self.user.email,
+                "password": "TenantFlow123!",
+                "remember_me": False,
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_step3_allows_empty_tenant_submission_and_moves_forward(self):
+        self.login()
+
+        response = self.client.post(
+            "/onboarding/step/3",
+            data={"tenants_json": "[]"},
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.request.path, "/onboarding/step/4")
+        self.assertEqual(Tenant.query.filter_by(property_id=self.property.id).count(), 0)
+
+        with self.client.session_transaction() as session_data:
+            self.assertTrue(session_data.get("tenant_setup_skipped"))
+
+    def test_step3_saves_complete_tenants_and_ignores_partial_rows(self):
+        self.login()
+
+        response = self.client.post(
+            "/onboarding/step/3",
+            data={
+                "tenants_json": json.dumps(
+                    [
+                        {
+                            "name": "Zara Fashion",
+                            "category": "Fashion",
+                            "zone": "A",
+                            "floor": "1",
+                            "unit_number": "A-101",
+                            "contact_email": "store@example.com",
+                        },
+                        {
+                            "name": "Incomplete Store",
+                            "category": "",
+                            "zone": "B",
+                            "floor": "",
+                            "unit_number": "B-202",
+                            "contact_email": "bad@example.com",
+                        },
+                    ]
+                )
+            },
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.request.path, "/onboarding/step/4")
+
+        tenants = Tenant.query.filter_by(property_id=self.property.id).all()
+        self.assertEqual(len(tenants), 1)
+        self.assertEqual(tenants[0].name, "Zara Fashion")
+        self.assertEqual(tenants[0].unit_number, "A-101")
+        self.assertEqual(self.property.num_tenants, 1)
+
+        with self.client.session_transaction() as session_data:
+            self.assertFalse(session_data.get("tenant_setup_skipped"))
 
 
 if __name__ == "__main__":

@@ -186,7 +186,7 @@ class OnboardingStep3Form(FlaskForm):
 
         raw_value = (field.data or "").strip()
         if not raw_value:
-            raise ValidationError("Please add at least one tenant or select skip for now.")
+            return
 
         try:
             tenant_rows = json.loads(raw_value)
@@ -195,32 +195,6 @@ class OnboardingStep3Form(FlaskForm):
 
         if not isinstance(tenant_rows, list):
             raise ValidationError("Tenant data must be a list.")
-
-        required_fields = ["name", "category", "zone", "floor", "unit_number"]
-        complete_count = 0
-
-        for tenant in tenant_rows:
-            if not isinstance(tenant, dict):
-                continue
-
-            has_all_fields = True
-            for key in required_fields:
-                value = tenant.get(key)
-                if value is None:
-                    has_all_fields = False
-                    break
-
-                if isinstance(value, str) and not value.strip():
-                    has_all_fields = False
-                    break
-
-            if has_all_fields:
-                complete_count += 1
-
-        if complete_count < 1:
-            raise ValidationError(
-                "Please add at least one complete tenant row with name, category, zone, floor, and unit number."
-            )
 
 
 class OnboardingStep4Form(FlaskForm):
