@@ -71,7 +71,7 @@
                             </div>
                             <p class="small text-muted">Connect CRM for loyalty based campaign scoring Phase 2 feature.</p>
                             <div class="small mb-2">Using: <strong>{{ config.get('crm_system', 'none')|replace('_', ' ')|title }}</strong></div>
-                            <span class="badge text-bg-warning mb-2">Phase 2 Feature — Enhances Campaign Opportunity Score</span>
+                            <span class="badge text-bg-warning mb-2">Phase 2 Feature - Enhances Campaign Opportunity Score</span>
                             <p>
                                 <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="crm" data-test-url="{{ url_for('settings.test_integration', integration_type='crm') }}" type="button">Test Connection</button>
                                 <span class="small ms-2 test-result" id="test-result-crm"></span>
@@ -89,7 +89,7 @@
                             </div>
                             <p class="small text-muted">Real equipment sensors for Facility Intelligence Engine.</p>
                             {% if config.get('sensor_source') == 'simulator' %}
-                            <div class="small text-success mb-2">Simulator Active — Generating realistic data every 5 minutes.</div>
+                            <div class="small text-success mb-2">Simulator Active - Generating realistic data every 5 minutes.</div>
                             {% else %}
                             <div class="small mb-2">Endpoint: <strong>{{ config.get('sensor_api_endpoint') or 'Not configured' }}</strong></div>
                             {% endif %}
@@ -110,9 +110,9 @@
                             </div>
                             <p class="small text-muted">Real time weather data for Campaign Opportunity Score via Google Gemini.</p>
                             {% if gemini_enabled %}
-                            <div class="small text-success mb-2">Active — Powered by Google Gemini web search grounding.</div>
+                            <div class="small text-success mb-2">Active - Powered by Google Gemini web search grounding.</div>
                             {% else %}
-                            <div class="small text-warning mb-2">Inactive — Configure GEMINI_API_KEY in .env to enable.</div>
+                            <div class="small text-warning mb-2">Inactive - Configure GEMINI_API_KEY in .env to enable.</div>
                             {% endif %}
                             <p>
                                 <button class="btn btn-sm btn-outline-primary btn-test-integration" data-integration-type="weather" data-test-url="{{ url_for('settings.test_integration', integration_type='weather') }}" type="button">Test Connection</button>

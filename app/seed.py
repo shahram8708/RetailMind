@@ -680,7 +680,7 @@ def seed_database_if_empty():
         db.session.commit()
 
         print("============================================================")
-        print("  RetailMind — Database Seeded Successfully!")
+        print("  RetailMind - Database Seeded Successfully!")
         print("============================================================")
         print("  Superadmin    : superadmin@retailmind.ai  / SuperAdmin@123")
         print("  Mall Admin    : rajan@phoenixmall.com     / MallAdmin@123")

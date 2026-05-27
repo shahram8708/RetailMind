@@ -2,7 +2,7 @@
 
 ### Make Your Mall as Smart as the Best Digital Platform
 
-**RetailMind** is an AI-powered operations platform for mall teams, staff, and shoppers — deploying autonomous agents that handle inventory risk scoring, campaign generation, facility monitoring, and shopper assistance in real time, with full offline reliability as a Progressive Web App.
+**RetailMind** is an AI-powered operations platform for mall teams, staff, and shoppers - deploying autonomous agents that handle inventory risk scoring, campaign generation, facility monitoring, and shopper assistance in real time, with full offline reliability as a Progressive Web App.
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com/)
@@ -40,41 +40,41 @@
 
 ## About the Project
 
-Retail malls generate enormous amounts of operational data every minute — foot traffic by zone, sales velocity per SKU, equipment sensor readings, campaign impressions — and nearly all of it goes unprocessed until something breaks. RetailMind exists to change that.
+Retail malls generate enormous amounts of operational data every minute - foot traffic by zone, sales velocity per SKU, equipment sensor readings, campaign impressions - and nearly all of it goes unprocessed until something breaks. RetailMind exists to change that.
 
 It gives mall operators and their teams a single intelligent platform where AI agents work in the background: flagging stock that is about to run out before it does, drafting marketing campaigns anchored to real-time weather and foot traffic, raising maintenance work orders the moment a sensor reading goes anomalous, and answering shopper queries via a natural-language search interface.
 
-RetailMind is built for **Indian mall operators** — pricing is in INR, payments go through Razorpay, and the platform ships with multi-tier subscription management (Starter, Professional, Enterprise) and a full superadmin console for the platform operator. It also ships as a fully functional Progressive Web App, meaning staff can keep working even when the internet drops.
+RetailMind is built for **Indian mall operators** - pricing is in INR, payments go through Razorpay, and the platform ships with multi-tier subscription management (Starter, Professional, Enterprise) and a full superadmin console for the platform operator. It also ships as a fully functional Progressive Web App, meaning staff can keep working even when the internet drops.
 
 ---
 
 ## Key Features
 
-**Autonomous AI Agent with Four Missions** — a background agent continuously runs inventory, campaign, facility, and shopper missions on a configurable schedule, surfacing actions for human approval or executing them automatically based on per-property thresholds.
+**Autonomous AI Agent with Four Missions** - a background agent continuously runs inventory, campaign, facility, and shopper missions on a configurable schedule, surfacing actions for human approval or executing them automatically based on per-property thresholds.
 
-**Stock Risk Scoring (SRS)** — every SKU is scored on a 0–1 scale using sales velocity, reorder thresholds, supplier lead times, and SKU criticality; Gemini 2.5 Flash writes the human-readable reasoning for every alert.
+**Stock Risk Scoring (SRS)** - every SKU is scored on a 0–1 scale using sales velocity, reorder thresholds, supplier lead times, and SKU criticality; Gemini 2.5 Flash writes the human-readable reasoning for every alert.
 
-**Campaign Opportunity Scoring (COS)** — the agent evaluates foot traffic patterns, seasonal factors, and real-time weather context (also queried via Gemini) to surface and auto-generate targeted campaign copy for the right store, zone, and audience.
+**Campaign Opportunity Scoring (COS)** - the agent evaluates foot traffic patterns, seasonal factors, and real-time weather context (also queried via Gemini) to surface and auto-generate targeted campaign copy for the right store, zone, and audience.
 
-**Facility Performance Scoring (FPS)** — sensor readings from HVAC, escalators, elevators, and other equipment are compared with historical baselines using Z-score anomaly detection; critical scores automatically raise work orders.
+**Facility Performance Scoring (FPS)** - sensor readings from HVAC, escalators, elevators, and other equipment are compared with historical baselines using Z-score anomaly detection; critical scores automatically raise work orders.
 
-**AI-Powered Shopper Search** — shoppers can describe what they are looking for in plain language; Gemini extracts structured intent (category, brand, price range, size, color) and ranks matching SKUs across all tenants in the mall.
+**AI-Powered Shopper Search** - shoppers can describe what they are looking for in plain language; Gemini extracts structured intent (category, brand, price range, size, color) and ranks matching SKUs across all tenants in the mall.
 
-**Progressive Web App with Offline Support** — a Service Worker pre-caches all critical routes and assets; an IndexedDB-backed sync queue replays mutations made while offline once connectivity is restored.
+**Progressive Web App with Offline Support** - a Service Worker pre-caches all critical routes and assets; an IndexedDB-backed sync queue replays mutations made while offline once connectivity is restored.
 
-**Web Push Notifications** — VAPID-based push notifications deliver real-time alerts to subscribed staff browsers, backed by the `pywebpush` library.
+**Web Push Notifications** - VAPID-based push notifications deliver real-time alerts to subscribed staff browsers, backed by the `pywebpush` library.
 
-**Built-in Billing with Razorpay** — subscription management, order creation, payment signature verification, and receipt email dispatch are wired end-to-end; the billing history page renders downloadable invoice pages.
+**Built-in Billing with Razorpay** - subscription management, order creation, payment signature verification, and receipt email dispatch are wired end-to-end; the billing history page renders downloadable invoice pages.
 
-**PDF Analytics Export** — the analytics module can generate a full property performance report as a PDF (via ReportLab) covering revenue trends, campaign ROI, foot traffic, and agent activity.
+**PDF Analytics Export** - the analytics module can generate a full property performance report as a PDF (via ReportLab) covering revenue trends, campaign ROI, foot traffic, and agent activity.
 
-**Elasticsearch-Accelerated Search** — when Elasticsearch credentials are present, shopper search and inventory queries are routed through an ES index; if not, the platform falls back gracefully to SQLite/PostgreSQL queries.
+**Elasticsearch-Accelerated Search** - when Elasticsearch credentials are present, shopper search and inventory queries are routed through an ES index; if not, the platform falls back gracefully to SQLite/PostgreSQL queries.
 
-**5-Step Guided Onboarding** — new mall admins walk through property setup, tenant configuration, inventory upload, team invitations, and agent configuration in a gated multi-step wizard before gaining dashboard access.
+**5-Step Guided Onboarding** - new mall admins walk through property setup, tenant configuration, inventory upload, team invitations, and agent configuration in a gated multi-step wizard before gaining dashboard access.
 
-**Superadmin Platform Console** — a completely separate admin surface lets platform operators manage all properties, tenants, users, subscriptions, billing records, demo requests, agent logs, and system health in one place.
+**Superadmin Platform Console** - a completely separate admin surface lets platform operators manage all properties, tenants, users, subscriptions, billing records, demo requests, agent logs, and system health in one place.
 
-**Role-Based Access Control** — six distinct roles (`superadmin`, `mall_admin`, `store_manager`, `marketing_manager`, `facility_manager`, `shopper`) each route to an appropriate dashboard and see only the actions permitted by the `@role_required` decorator.
+**Role-Based Access Control** - six distinct roles (`superadmin`, `mall_admin`, `store_manager`, `marketing_manager`, `facility_manager`, `shopper`) each route to an appropriate dashboard and see only the actions permitted by the `@role_required` decorator.
 
 ---
 
@@ -149,21 +149,21 @@ RetailMind-main/
 │   ├── __init__.py                # App factory (create_app), blueprint registration, CSP headers
 │   ├── config.py                  # DevelopmentConfig, ProductionConfig, TestingConfig
 │   ├── extensions.py              # Flask extension instances (db, login_manager, mail, etc.)
-│   ├── seed.py                    # Database seeder — populates demo property, tenants, inventory, agents
+│   ├── seed.py                    # Database seeder - populates demo property, tenants, inventory, agents
 │   │
 │   ├── models/                    # SQLAlchemy ORM models
 │   │   ├── user.py                # User, EmailVerificationToken, PasswordResetToken
-│   │   ├── property.py            # MallProperty — the top-level entity for each mall
-│   │   ├── tenant.py              # Tenant — individual stores inside a property
+│   │   ├── property.py            # MallProperty - the top-level entity for each mall
+│   │   ├── tenant.py              # Tenant - individual stores inside a property
 │   │   ├── inventory.py           # InventoryItem, SalesVelocity, FootTraffic
-│   │   ├── campaign.py            # Campaign — AI-generated or manual marketing campaigns
+│   │   ├── campaign.py            # Campaign - AI-generated or manual marketing campaigns
 │   │   ├── facility.py            # Equipment, SensorReading, WorkOrder
 │   │   ├── agent.py               # AgentConfiguration, AgentAction
 │   │   ├── billing.py             # Subscription, PaymentRecord, DemoRequest
 │   │   ├── notification.py        # Notification, PushSubscription
-│   │   └── shopper.py             # ShopperInteraction — query logs for the shopper portal
+│   │   └── shopper.py             # ShopperInteraction - query logs for the shopper portal
 │   │
-│   ├── routes/                    # Flask blueprints — one per feature domain
+│   ├── routes/                    # Flask blueprints - one per feature domain
 │   │   ├── public.py              # Landing, features, pricing, about, demo request
 │   │   ├── auth.py                # Register, login, logout, verify email, reset password
 │   │   ├── onboarding.py          # 5-step onboarding wizard
@@ -288,14 +288,14 @@ Optional but strongly recommended for production:
 
 ### Installation
 
-**Step 1 — Clone the repository**
+**Step 1 - Clone the repository**
 
 ```bash
 git clone https://github.com/shahram8708/RetailMind
 cd RetailMind
 ```
 
-**Step 2 — Create and activate a virtual environment**
+**Step 2 - Create and activate a virtual environment**
 
 On macOS and Linux:
 
@@ -318,13 +318,13 @@ python -m venv venv
 venv\Scripts\activate.bat
 ```
 
-**Step 3 — Install Python dependencies**
+**Step 3 - Install Python dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-**Step 4 — Configure environment variables**
+**Step 4 - Configure environment variables**
 
 ```bash
 cp .env.example .env
@@ -332,7 +332,7 @@ cp .env.example .env
 
 Open `.env` in your editor and fill in the values. At a minimum you need `SECRET_KEY` and `GEMINI_API_KEY` for the AI features to work. See the [Environment Variables](#environment-variables) section for a full breakdown.
 
-**Step 5 — Initialize the database**
+**Step 5 - Initialize the database**
 
 RetailMind defaults to SQLite for zero-config local development. The first run automatically creates all tables and seeds demo data:
 
@@ -421,7 +421,7 @@ grep -n "superadmin\|password\|email" app/seed.py | head -20
 
 1. Register at `/auth/register` (or be invited by superadmin).
 2. Complete the 5-step onboarding at `/onboarding/step/1`: set property details, configure tenants and floors, link inventory data sources, invite team members, and configure agent thresholds.
-3. Land on the main dashboard at `/dashboard` — real-time KPI tiles, foot traffic chart by zone, and the agent action queue.
+3. Land on the main dashboard at `/dashboard` - real-time KPI tiles, foot traffic chart by zone, and the agent action queue.
 4. Approve or reject agent-raised inventory restock actions from the action panel.
 5. View per-SKU risk detail at `/inventory/{sku_id}` with SRS trend charts and stockout history.
 6. Navigate to `/campaigns` to see AI-generated campaign opportunities and activate them.
@@ -595,13 +595,13 @@ pytest -v
 
 All tests use an in-memory SQLite database configured through `TestingConfig`. CSRF protection is disabled in test mode. The test suite covers:
 
-`test_models.py` — User password hashing and verification, role routing logic, property and tenant model relationships, agent action creation and status transitions.
+`test_models.py` - User password hashing and verification, role routing logic, property and tenant model relationships, agent action creation and status transitions.
 
-`test_routes.py` — All public page routes (landing, features, pricing, about, demo), the login page, authenticated dashboard access, facility work order creation, and redirect behaviour for unauthenticated users.
+`test_routes.py` - All public page routes (landing, features, pricing, about, demo), the login page, authenticated dashboard access, facility work order creation, and redirect behaviour for unauthenticated users.
 
-`test_services.py` — SRS score computation for at-risk and healthy SKUs, FPS score computation for equipment with sensor anomalies, in-app notification creation, mark-as-read, and unread count queries.
+`test_services.py` - SRS score computation for at-risk and healthy SKUs, FPS score computation for equipment with sensor anomalies, in-app notification creation, mark-as-read, and unread count queries.
 
-`test_pwa.py` — PWA manifest and offline page routes, push notification subscription registration and retrieval for authenticated users.
+`test_pwa.py` - PWA manifest and offline page routes, push notification subscription registration and retrieval for authenticated users.
 
 ---
 
@@ -694,7 +694,7 @@ There is no Docker or CI/CD configuration included in this repository at present
 
 Contributions are welcome. Here is how to get involved:
 
-**Step 1 — Fork the repository**
+**Step 1 - Fork the repository**
 
 Click the Fork button on GitHub and clone your fork locally:
 
@@ -703,21 +703,21 @@ git clone https://github.com/YOUR_USERNAME/RetailMind
 cd RetailMind
 ```
 
-**Step 2 — Create a feature branch**
+**Step 2 - Create a feature branch**
 
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
-**Step 3 — Make your changes**
+**Step 3 - Make your changes**
 
 Follow these conventions:
 
-All Python code should be readable and follow PEP 8. Business logic goes in `app/services/`. Route handlers in `app/routes/` should stay thin — validate the request, call a service, return the response. Models in `app/models/` should not contain business logic.
+All Python code should be readable and follow PEP 8. Business logic goes in `app/services/`. Route handlers in `app/routes/` should stay thin - validate the request, call a service, return the response. Models in `app/models/` should not contain business logic.
 
 For frontend changes, keep JavaScript modular and page-scoped. Avoid adding new CDN dependencies without discussion.
 
-**Step 4 — Run the tests**
+**Step 4 - Run the tests**
 
 ```bash
 pytest -q
@@ -725,7 +725,7 @@ pytest -q
 
 Make sure all existing tests pass before opening a PR.
 
-**Step 5 — Commit and push**
+**Step 5 - Commit and push**
 
 ```bash
 git add .
@@ -733,7 +733,7 @@ git commit -m "feat: describe what your change does"
 git push origin feature/your-feature-name
 ```
 
-**Step 6 — Open a Pull Request**
+**Step 6 - Open a Pull Request**
 
 Go to the original repository on GitHub and open a PR from your branch. Describe what you changed and why.
 
@@ -749,7 +749,7 @@ Open a GitHub Issue and include:
 
 **Requesting features**
 
-Open a GitHub Issue with the `feature request` label. Describe the use case — not just the solution.
+Open a GitHub Issue with the `feature request` label. Describe the use case - not just the solution.
 
 ---
 
@@ -797,16 +797,16 @@ If you are the author and want to open-source this work, consider adding an [MIT
 
 RetailMind is built on the shoulders of several excellent open-source projects and commercial APIs:
 
-- [Flask](https://flask.palletsprojects.com/) — the web framework at the core of everything
-- [SQLAlchemy](https://www.sqlalchemy.org/) and [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) — ORM that makes the data model clean
-- [Bootstrap 5](https://getbootstrap.com/) — UI components and responsive grid
-- [Chart.js](https://www.chartjs.org/) — all the charts on dashboards and analytics pages
-- [Google Gemini](https://ai.google.dev/) — Gemini 2.5 Flash powers the AI reasoning, weather lookup, campaign copy generation, and shopper intent extraction
-- [Razorpay](https://razorpay.com/) — payment gateway for INR subscriptions
-- [APScheduler](https://apscheduler.readthedocs.io/) — the background scheduler that runs all four agent missions on configurable intervals
-- [ReportLab](https://www.reportlab.com/) — PDF report generation for the analytics export
-- [pywebpush](https://github.com/web-push-libs/pywebpush) — VAPID-based Web Push delivery
-- [Elasticsearch](https://www.elastic.co/) — optional search acceleration for shopper queries and inventory lookups
+- [Flask](https://flask.palletsprojects.com/) - the web framework at the core of everything
+- [SQLAlchemy](https://www.sqlalchemy.org/) and [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) - ORM that makes the data model clean
+- [Bootstrap 5](https://getbootstrap.com/) - UI components and responsive grid
+- [Chart.js](https://www.chartjs.org/) - all the charts on dashboards and analytics pages
+- [Google Gemini](https://ai.google.dev/) - Gemini 2.5 Flash powers the AI reasoning, weather lookup, campaign copy generation, and shopper intent extraction
+- [Razorpay](https://razorpay.com/) - payment gateway for INR subscriptions
+- [APScheduler](https://apscheduler.readthedocs.io/) - the background scheduler that runs all four agent missions on configurable intervals
+- [ReportLab](https://www.reportlab.com/) - PDF report generation for the analytics export
+- [pywebpush](https://github.com/web-push-libs/pywebpush) - VAPID-based Web Push delivery
+- [Elasticsearch](https://www.elastic.co/) - optional search acceleration for shopper queries and inventory lookups
 
 ---
 
@@ -816,4 +816,4 @@ RetailMind is built on the shoulders of several excellent open-source projects a
 **GitHub:** [github.com/shahram8708](https://github.com/shahram8708)  
 **Repository:** [github.com/shahram8708/RetailMind](https://github.com/shahram8708/RetailMind)
 
-If you have questions, found a bug, or just want to talk about AI-powered retail operations — open an issue on GitHub. The project is actively maintained and contributions are genuinely welcome.
+If you have questions, found a bug, or just want to talk about AI-powered retail operations - open an issue on GitHub. The project is actively maintained and contributions are genuinely welcome.

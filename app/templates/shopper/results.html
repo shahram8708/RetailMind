@@ -89,7 +89,7 @@
                         {% if result.stock_status == 'In Stock' %}
                             <span class="badge stock-badge in-stock">In Stock</span>
                         {% elif result.stock_status == 'Low Stock' %}
-                            <span class="badge stock-badge low-stock">Low Stock — Only {{ result.stock_level }} left!</span>
+                            <span class="badge stock-badge low-stock">Low Stock - Only {{ result.stock_level }} left!</span>
                         {% else %}
                             <span class="badge bg-danger">Out of Stock</span>
                         {% endif %}
@@ -119,7 +119,7 @@
                     </div>
 
                     {% if result.active_campaign %}
-                    <div class="campaign-banner">🎉 {{ result.active_campaign }} — In store offer available</div>
+                    <div class="campaign-banner">🎉 {{ result.active_campaign }} - In store offer available</div>
                     {% endif %}
                 </article>
                 {% endfor %}
