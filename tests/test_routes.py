@@ -4,6 +4,7 @@ import unittest
 
 from app import create_app
 from app.extensions import db
+from app.models.facility import Equipment, WorkOrder
 from app.models.property import MallProperty
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -116,6 +117,39 @@ class TestAuthenticatedRoutes(unittest.TestCase):
         self.login_as("rajan@phoenixmall.com", "MallAdmin@123")
         response = self.client.get("/campaigns")
         self.assertEqual(response.status_code, 200)
+
+    def test_facility_work_order_create_handles_missing_equipment_id(self):
+        self.login_as("rajan@phoenixmall.com", "MallAdmin@123")
+
+        user = User.query.filter_by(email="rajan@phoenixmall.com").first()
+        self.assertIsNotNone(user)
+
+        equipment = Equipment.query.filter_by(property_id=user.property_id).order_by(Equipment.id.asc()).first()
+        self.assertIsNotNone(equipment)
+
+        before_count = WorkOrder.query.count()
+
+        response = self.client.post(
+            "/facility/work-order/create",
+            data={
+                "title": "Test fallback work order",
+                "description": "Test fallback work order description for missing equipment id.",
+                "priority": "medium",
+                "assigned_to_user_id": 0,
+                "estimated_cost_inr": "0",
+            },
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        payload = json.loads(response.data)
+        self.assertTrue(payload["success"])
+        self.assertEqual(WorkOrder.query.count(), before_count + 1)
+
+        created = WorkOrder.query.order_by(WorkOrder.id.desc()).first()
+        self.assertIsNotNone(created)
+        self.assertEqual(created.equipment_id, equipment.id)
 
     def test_facility_accessible_when_logged_in(self):
         self.login_as("rajan@phoenixmall.com", "MallAdmin@123")

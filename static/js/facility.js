@@ -392,7 +392,29 @@
             return;
         }
 
-        const modal = new bootstrap.Modal(modalEl);
+        if (modalEl.parentElement !== document.body) {
+            document.body.appendChild(modalEl);
+        }
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const endpoint = form.getAttribute('action') || '/facility/work-order/create';
+
+        modalEl.addEventListener('shown.bs.modal', function () {
+            const firstField = form.querySelector('input:not([type="hidden"]), textarea, select');
+            if (firstField && typeof firstField.focus === 'function') {
+                firstField.focus();
+            }
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            form.reset();
+            if (hiddenEquipment) {
+                hiddenEquipment.value = '';
+            }
+            if (modalTitle) {
+                modalTitle.textContent = 'Create Work Order';
+            }
+        });
 
         document.querySelectorAll('.btn-create-work-order').forEach((button) => {
             button.addEventListener('click', function () {
@@ -413,7 +435,7 @@
             event.preventDefault();
             const formData = new FormData(form);
 
-            fetch('/facility/work-order/create', {
+            fetch(endpoint, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -430,7 +452,6 @@
                     modal.hide();
                     showMessage(`Work order #${payload.work_order_id} created`, 'success');
                     appendWorkOrderRow(payload.work_order_id, payload.title, payload.equipment_name, payload.priority);
-                    form.reset();
                 })
                 .catch(() => {
                     showMessage('Unable to create work order', 'error');
@@ -444,11 +465,13 @@
             return;
         }
 
+        const endpoint = form.getAttribute('action') || '/facility/work-order/create';
+
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData(form);
 
-            fetch('/facility/work-order/create', {
+            fetch(endpoint, {
                 method: 'POST',
                 body: formData,
                 headers: {

@@ -222,8 +222,8 @@
 {% block extra_js %}
 {{ super() }}
 <script nonce="{{ csp_nonce }}">
-const revenueByMonth = {{ revenue_by_month | tojson | safe }};
-const revenueByTier = {{ revenue_by_tier | tojson | safe }};
+window.revenueByMonth = {{ revenue_by_month | tojson | safe }};
+window.revenueByTier = {{ revenue_by_tier | tojson | safe }};
 </script>
 {% if pwa_dev_mode %}
 <script src="{{ url_for('static', filename='js/superadmin.js') }}" defer></script>

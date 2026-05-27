@@ -236,6 +236,24 @@
     opacity: 0.6;
 }
 
+#createWorkOrderModal {
+    z-index: 11050;
+}
+
+#createWorkOrderModal .modal-dialog,
+#createWorkOrderModal .modal-content {
+    pointer-events: auto;
+}
+
+.modal-backdrop.show {
+    z-index: 11040;
+}
+
+#createWorkOrderModal .modal-body {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
 @media (max-width: 1199px) {
     .equipment-grid {
         grid-template-columns: repeat(2, 1fr);

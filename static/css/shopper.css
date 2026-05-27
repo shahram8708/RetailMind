@@ -446,6 +446,19 @@
     border-color: #1a6fe8;
 }
 
+#navModal {
+    z-index: 11050;
+}
+
+#navModal .modal-dialog,
+#navModal .modal-content {
+    pointer-events: auto;
+}
+
+.modal-backdrop.show {
+    z-index: 11040;
+}
+
 @media (max-width: 991.98px) {
     .results-layout {
         grid-template-columns: 1fr;

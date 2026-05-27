@@ -130,7 +130,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (isAuthOrPayment(url)) {
-        event.respondWith(fetch(request));
+        event.respondWith(networkOnly(request));
         return;
     }
 
@@ -158,7 +158,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(fetch(request));
+    event.respondWith(networkOnly(request));
 });
 
 self.addEventListener('sync', (event) => {
@@ -303,6 +303,18 @@ async function networkFirst(request, cacheName, timeoutMs, fallbackUrl) {
 
     inFlightRequests.set(key, fetchPromise);
     return fetchPromise;
+}
+
+async function networkOnly(request) {
+    try {
+        return await fetch(request);
+    } catch (_error) {
+        const cached = await caches.match(request);
+        if (cached) {
+            return cached;
+        }
+        return new Response('Offline', { status: 503, statusText: 'Offline' });
+    }
 }
 
 async function staleWhileRevalidate(request, cacheName, maxEntries) {

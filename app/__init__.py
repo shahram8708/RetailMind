@@ -195,7 +195,13 @@ def create_app():
                 "max-age=31536000; includeSubDomains; preload",
             )
 
-        script_src = ["'self'", f"'nonce-{getattr(g, 'csp_nonce', '')}'", "https://cdn.jsdelivr.net", "https://checkout.razorpay.com"]
+        script_src = [
+            "'self'",
+            f"'nonce-{getattr(g, 'csp_nonce', '')}'",
+            "https://cdn.jsdelivr.net",
+            "https://checkout.razorpay.com",
+            "https://cdn.razorpay.com",
+        ]
         style_src = ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"]
         img_src = ["'self'", "data:", "blob:"]
         font_src = ["'self'", "data:"]
@@ -204,6 +210,7 @@ def create_app():
             "https://generativelanguage.googleapis.com",
             "https://api.razorpay.com",
             "https://checkout.razorpay.com",
+            "https://lumberjack.razorpay.com",
             "https://cdn.jsdelivr.net",
         ]
 
@@ -214,7 +221,7 @@ def create_app():
             f"img-src {' '.join(img_src)}; "
             f"font-src {' '.join(font_src)}; "
             f"connect-src {' '.join(connect_src)}; "
-            "frame-src 'self' https://checkout.razorpay.com; "
+            "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com; "
             "manifest-src 'self'; "
             "worker-src 'self';"
         )

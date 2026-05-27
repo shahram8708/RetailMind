@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import math
+from urllib.parse import urlparse
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -44,6 +45,30 @@ def _prepare_work_order_form(facility_managers):
         for manager in facility_managers
     ]
     return form
+
+
+def _resolve_work_order_equipment(property_id):
+    equipment_id = request.form.get("equipment_id", type=int)
+    if equipment_id:
+        equipment = Equipment.query.filter_by(id=equipment_id, property_id=property_id).first()
+        if equipment is not None:
+            return equipment
+
+    referrer = request.referrer or ""
+    if referrer:
+        parsed_referrer = urlparse(referrer)
+        referrer_path = (parsed_referrer.path or "").rstrip("/")
+        if referrer_path.startswith("/facility/"):
+            referrer_equipment_id = referrer_path.rsplit("/", 1)[-1]
+            if referrer_equipment_id.isdigit():
+                equipment = Equipment.query.filter_by(
+                    id=int(referrer_equipment_id),
+                    property_id=property_id,
+                ).first()
+                if equipment is not None:
+                    return equipment
+
+    return Equipment.query.filter_by(property_id=property_id, is_active=True).order_by(Equipment.id.asc()).first()
 
 
 @facility_bp.route("", methods=["GET"])
@@ -258,12 +283,11 @@ def create_work_order():
         flash("Unable to create work order. Please check required fields.", "danger")
         return redirect(request.referrer or url_for("facility.index"))
 
-    equipment_id = request.form.get("equipment_id", type=int)
-    equipment = Equipment.query.filter_by(id=equipment_id, property_id=property_id).first()
+    equipment = _resolve_work_order_equipment(property_id)
     if equipment is None:
         if _is_ajax_request():
-            return jsonify({"success": False, "error": "Equipment not found"}), 404
-        flash("Equipment not found.", "warning")
+            return jsonify({"success": False, "error": "No equipment available for this property"}), 400
+        flash("No equipment available for this property.", "warning")
         return redirect(url_for("facility.index"))
 
     assigned_to_user_id = int(form.assigned_to_user_id.data or 0)

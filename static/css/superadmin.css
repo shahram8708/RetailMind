@@ -30,10 +30,6 @@
     text-decoration: underline;
 }
 
-.sa-page-wrapper {
-    padding-top: calc(60px + 32px);
-}
-
 .sa-sidebar {
     width: 240px;
     min-height: 100vh;
@@ -251,6 +247,24 @@
     color: #ffffff;
 }
 
+#changeTierModal {
+    z-index: 11050;
+}
+
+#changeTierModal .modal-dialog,
+#changeTierModal .modal-content {
+    pointer-events: auto;
+}
+
+#changeTierModal .modal-body {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+.modal-backdrop.show {
+    z-index: 11040;
+}
+
 .sa-avatar {
     width: 32px;
     height: 32px;
@@ -323,7 +337,6 @@
     }
 
     .sa-page-wrapper {
-        padding-top: calc(60px + 48px);
         padding-left: 12px;
         padding-right: 12px;
     }

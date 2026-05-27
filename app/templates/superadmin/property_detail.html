@@ -5,6 +5,21 @@
 {% block extra_css %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin.css') }}">
+<style>
+    #changeTierModal {
+        z-index: 11050 !important;
+    }
+
+    #changeTierModal .modal-dialog,
+    #changeTierModal .modal-content {
+        pointer-events: auto !important;
+    }
+
+    .modal-backdrop.show {
+        z-index: 11040 !important;
+        pointer-events: none !important;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -314,6 +329,14 @@
         </div>
     </div>
 </div>
+<script>
+    (function () {
+        var modal = document.getElementById('changeTierModal');
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+    }());
+</script>
 {% endblock %}
 
 {% block extra_js %}

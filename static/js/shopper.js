@@ -168,7 +168,15 @@
 
         let navModal = null;
         if (navModalElement && typeof bootstrap !== 'undefined') {
-            navModal = new bootstrap.Modal(navModalElement);
+            if (navModalElement.parentElement !== document.body) {
+                document.body.appendChild(navModalElement);
+            }
+
+            navModal = bootstrap.Modal.getOrCreateInstance(navModalElement, {
+                backdrop: true,
+                focus: true,
+                keyboard: true
+            });
         }
 
         directionsButtons.forEach((button) => {

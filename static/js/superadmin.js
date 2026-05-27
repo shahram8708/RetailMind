@@ -142,7 +142,32 @@
             return;
         }
 
+        if (modalElement.parentElement !== document.body) {
+            document.body.appendChild(modalElement);
+        }
+
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        const modalZIndex = 11050;
+        const backdropZIndex = 11040;
+
+        modalElement.style.zIndex = String(modalZIndex);
+
+        modalElement.addEventListener('shown.bs.modal', function () {
+            modalElement.style.zIndex = String(modalZIndex);
+
+            document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+                backdrop.style.zIndex = String(backdropZIndex);
+                backdrop.style.pointerEvents = 'auto';
+            });
+
+            window.setTimeout(function () {
+                tierSelect.focus();
+            }, 0);
+        });
+
+        modalElement.addEventListener('show.bs.modal', function () {
+            modalElement.style.zIndex = String(modalZIndex);
+        });
 
         document.querySelectorAll('.btn-change-tier').forEach((button) => {
             button.addEventListener('click', function () {
@@ -505,7 +530,15 @@
         });
     }
 
-    function initRevenueCharts() {
+    async function initRevenueCharts() {
+        if (typeof ensureChartJs === 'function') {
+            try {
+                await ensureChartJs();
+            } catch (_error) {
+                return;
+            }
+        }
+
         if (typeof Chart === 'undefined') {
             return;
         }
