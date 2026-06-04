@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com/)
 [![Gemini AI](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?logo=google)](https://ai.google.dev/)
-[![License](https://img.shields.io/badge/License-Not_Specified-lightgrey)](#license)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?logo=googlechrome)](https://web.dev/progressive-web-apps/)
 [![Tests](https://img.shields.io/badge/Tests-pytest-green?logo=pytest)](https://pytest.org/)
 [![Last Commit](https://img.shields.io/badge/Last_Commit-May_2026-brightgreen)](https://github.com/shahram8708/RetailMind)
@@ -787,9 +787,7 @@ Based on the current codebase and visible gaps, here is what is done and what is
 
 ## License
 
-No `LICENSE` file was found in this repository. The project does not currently specify a license.
-
-If you are the author and want to open-source this work, consider adding an [MIT License](https://choosealicense.com/licenses/mit/) or [Apache 2.0](https://choosealicense.com/licenses/apache-2.0/). Without a license, the default copyright applies and no one has permission to use, modify, or distribute the code.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
